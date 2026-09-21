@@ -512,7 +512,6 @@ document.addEventListener('DOMContentLoaded', function () {
           '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">' +
           '<b style="color:var(--txt);font-size:.92rem">' + esc(a.label || 'Endereço') + ' ' + (a.is_default ? '<span style="background:var(--c);color:#000;font-size:.65rem;padding:2px 6px;border-radius:4px;font-weight:700">PADRÃO</span>' : '') + '</b>' +
           '<div style="display:flex;gap:8px">' +
-          (!a.is_default ? '<button onclick="vsSetDefaultAddress(\'' + a.id + '\')" class="pp-btn-ghost" style="padding:4px 8px;font-size:.72rem">Tornar Padrão</button>' : '') +
           '<button onclick="vsEditAddressModal(\'' + a.id + '\')" class="pp-btn-ghost" style="padding:4px 8px;font-size:.72rem"><i class="fa fa-edit"></i></button>' +
           '<button onclick="vsDeleteAddressItem(\'' + a.id + '\')" class="pp-btn-ghost" style="padding:4px 8px;font-size:.72rem;border-color:rgba(255,50,50,.3);color:#ff5252"><i class="fa fa-trash"></i></button>' +
           '</div></div>' +
