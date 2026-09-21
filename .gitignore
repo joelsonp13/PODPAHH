@@ -1,0 +1,7 @@
+node_modules/
+data/
+.env
+*.rar
+*.db
+pedevapor-shop-backup/
+.vscode/
