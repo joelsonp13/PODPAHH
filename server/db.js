@@ -334,10 +334,13 @@ function updateCustomer(customerId, input) {
   const db = readDb();
   const digits = normalizePhone(phone);
 
-  // Telefone é OBRIGATÓRIO no login
-  if (!digits) return { success: false, status: 400, error: 'Informe seu número de WhatsApp com DDD para entrar.' };
-  if (!isValidPhone(digits)) {
-    return { success: false, status: 400, error: 'Número de WhatsApp inválido. Use o formato (41) 99999-9999.' };
+  // Telefone OPCIONAL no login (só o cadastro exige). Se informado, valida.
+  let phoneCheck = '';
+  if (digits) {
+    if (!isValidPhone(digits)) {
+      return { success: false, status: 400, error: 'Número de WhatsApp inválido. Use o formato (41) 99999-9999.' };
+    }
+    phoneCheck = digits;
   }
 
   const normalizedEmail = String(email || '').trim().toLowerCase();
@@ -350,8 +353,8 @@ function updateCustomer(customerId, input) {
     return { success: false, status: 401, error: 'Senha incorreta.' };
   }
 
-  // Telefone precisa bater com o da conta
-  if (customer.phone !== digits) {
+  // Telefone, se informado no login, precisa bater com o da conta
+  if (phoneCheck && customer.phone !== phoneCheck) {
     return { success: false, status: 401, error: 'Este número de WhatsApp não pertence a esta conta. Use o número cadastrado.' };
   }
 

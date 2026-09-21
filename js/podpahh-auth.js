@@ -30,6 +30,13 @@ document.addEventListener('DOMContentLoaded', function () {
     f.addEventListener('input', function () { maskPhone(f); });
   });
 
+  // Login pede só e-mail + senha. Telefone só no cadastro.
+  // Esconde o campo de WhatsApp do form de login (vale p/ HTML em cache).
+  document.querySelectorAll('form.woocommerce-form-login').forEach(function (lf) {
+    var lp = lf.querySelector('#login_phone');
+    if (lp && lp.closest('.vs-form-group')) lp.closest('.vs-form-group').style.display = 'none';
+  });
+
   function getSession() {
     try {
       var s = JSON.parse(localStorage.getItem('podpahh_session_v1'));
@@ -57,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.location.reload();
   };
 
-  // Intercepta Login
+  // Intercepta Login (só e-mail/usuário + senha; sem telefone)
   var loginForm = document.querySelector('form.woocommerce-form-login');
   if (loginForm) {
     loginForm.addEventListener('submit', async function (e) {
@@ -74,16 +81,10 @@ document.addEventListener('DOMContentLoaded', function () {
         alert('Por favor, informe e-mail/usuário e senha.');
         return;
       }
-      var digits = phoneDigits(phone);
-      if (!digits || !isValidPhone(digits)) {
-        alert('Informe um número de WhatsApp válido com DDD (ex: (41) 99999-9999).');
-        if (phoneInput) phoneInput.focus();
-        return;
-      }
 
       if (window.PodpahhDB) {
         try {
-          var res = await window.PodpahhDB.loginCustomer(user, pass, digits);
+          var res = await window.PodpahhDB.loginCustomer(user, pass, phoneDigits(phone));
           if (!res || !res.success) {
             alert(res && res.error ? res.error : 'Erro ao entrar.');
             return;
