@@ -337,6 +337,8 @@ document.addEventListener('DOMContentLoaded', function () {
       '.acc-card b{color:#fff;font-size:.88rem;display:block}' +
       '.acc-card span{font-size:.74rem;color:var(--dim);display:block}' +
       '.acc-orders{background:var(--bg1);border:1px solid var(--brd);border-radius:12px;padding:26px;min-height:284px;box-sizing:border-box}' +
+      '.acc-ordgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}' +
+      '.acc-ordcard{background:var(--bg3);border:1px solid var(--brd);border-radius:10px;padding:16px;min-width:0}' +
       '.acc-empty{text-align:center;padding:40px 16px;color:var(--dim)}' +
       '.acc-empty i{font-size:2.4rem;opacity:.4;display:block;margin-bottom:12px}' +
       '.acc-trap{display:inline-block;min-width:190px;min-height:78px;line-height:78px;padding:0 28px;background:var(--c);color:#001318;font-weight:800;letter-spacing:1.5px;transform:skewX(-10deg);border:none;cursor:pointer;font-size:.92rem;text-decoration:none;box-sizing:border-box}' +
@@ -347,7 +349,7 @@ document.addEventListener('DOMContentLoaded', function () {
       '.acc-field{margin-bottom:12px}' +
       '.acc-field label{font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px;font-weight:600}' +
       '.acc-field input{width:100%;background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:10px;font-size:.9rem;border-radius:6px;box-sizing:border-box}' +
-      '@media(max-width:900px){.acc-body{flex-direction:column}.acc-side{width:100%;min-height:0}.acc-cards{grid-template-columns:repeat(2,1fr)}.acc-top{flex-direction:column}}';
+      '@media(max-width:900px){.acc-body{flex-direction:column}.acc-side{width:100%;min-height:0}.acc-cards{grid-template-columns:repeat(2,1fr)}.acc-top{flex-direction:column}.acc-ordgrid{grid-template-columns:1fr}}';
     var st = document.createElement('style');
     st.id = 'acc-style';
     st.textContent = css;
@@ -377,6 +379,33 @@ document.addEventListener('DOMContentLoaded', function () {
     else window.location.href = accStoreHome();
   };
 
+  var ACC_ORDERS_PAGE = 6;
+
+  window.vsOrdersMore = function() {
+    var hidden = document.getElementById('accOrdersRest');
+    var btn = document.getElementById('accOrdersMoreBtn');
+    if (!hidden) return;
+    var show = hidden.style.display === 'none';
+    hidden.style.display = show ? '' : 'none';
+    if (btn) btn.innerHTML = show ? 'MOSTRAR MENOS <i class="fa fa-chevron-up"></i>' : btn.getAttribute('data-label');
+  };
+
+  function orderCardHtml(o) {
+    var items = (o.items || []).map(function (i) {
+      return '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,.06);font-size:.85rem">' +
+        '<span style="color:var(--txt)">' + esc(i.name) + ' <b style="color:var(--dim)">×' + esc(i.qty) + '</b></span>' +
+        '<span style="color:var(--txt);white-space:nowrap">' + fmtMoney(Number(i.price || 0) * Number(i.qty || 0)) + '</span></div>';
+    }).join('');
+    return '<div class="acc-ordcard">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">' +
+      '<b style="color:#fff;font-size:.92rem">Pedido <code style="font-size:.75rem;opacity:.7">' + esc(o.id) + '</code></b>' + orderBadge(o.status) + '</div>' +
+      '<div style="font-size:.8rem;color:var(--dim);margin-bottom:10px"><i class="fa fa-calendar"></i> ' + fmtDate(o.created_at) + ' &nbsp;|&nbsp; <i class="fa fa-credit-card"></i> ' + esc(o.payment_method || 'PIX') + '</div>' +
+      items +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid var(--brd);gap:8px;flex-wrap:wrap">' +
+      '<span style="font-size:.78rem;color:var(--dim)"><i class="fa fa-map-marker-alt"></i> ' + esc(orderAddressText(o)) + '</span>' +
+      '<b style="color:#4ade80;font-size:1rem;white-space:nowrap">' + fmtMoney(o.total) + '</b></div></div>';
+  }
+
   // Vitrine conforme a árvore: raiz tem loja.html; pedevapor-shop usa a
   // categoria descartáveis (lá não existe loja.html).
   function accStoreHome() {
@@ -395,21 +424,16 @@ document.addEventListener('DOMContentLoaded', function () {
         '<p style="margin:0 0 14px">Você ainda não fez nenhum pedido.</p>' +
         '<a href="' + accStoreHome() + '" class="pp-btn-ghost" style="display:inline-block;border-color:var(--c);color:var(--c)"><i class="fa fa-store"></i> VER PRODUTOS</a></div>';
     }
-    return orders.map(function (o) {
-      var items = (o.items || []).map(function (i) {
-        return '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,.06);font-size:.85rem">' +
-          '<span style="color:var(--txt)">' + esc(i.name) + ' <b style="color:var(--dim)">×' + esc(i.qty) + '</b></span>' +
-          '<span style="color:var(--txt);white-space:nowrap">' + fmtMoney(Number(i.price || 0) * Number(i.qty || 0)) + '</span></div>';
-      }).join('');
-      return '<div style="background:var(--bg3);border:1px solid var(--brd);border-radius:10px;padding:16px;margin-bottom:12px">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">' +
-        '<b style="color:#fff;font-size:.92rem">Pedido <code style="font-size:.75rem;opacity:.7">' + esc(o.id) + '</code></b>' + orderBadge(o.status) + '</div>' +
-        '<div style="font-size:.8rem;color:var(--dim);margin-bottom:10px"><i class="fa fa-calendar"></i> ' + fmtDate(o.created_at) + ' &nbsp;|&nbsp; <i class="fa fa-credit-card"></i> ' + esc(o.payment_method || 'PIX') + '</div>' +
-        items +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid var(--brd)">' +
-        '<span style="font-size:.82rem;color:var(--dim)"><i class="fa fa-map-marker-alt"></i> ' + esc(orderAddressText(o)) + '</span>' +
-        '<b style="color:#4ade80;font-size:1rem">' + fmtMoney(o.total) + '</b></div></div>';
-    }).join('');
+    var first = orders.slice(0, ACC_ORDERS_PAGE).map(orderCardHtml).join('');
+    var html = '<div class="acc-ordgrid">' + first + '</div>';
+    if (orders.length > ACC_ORDERS_PAGE) {
+      var rest = orders.slice(ACC_ORDERS_PAGE).map(orderCardHtml).join('');
+      var left = orders.length - ACC_ORDERS_PAGE;
+      html += '<div id="accOrdersRest" style="display:none"><div class="acc-ordgrid" style="margin-top:12px">' + rest + '</div></div>' +
+        '<div style="text-align:center;margin-top:14px">' +
+        '<button id="accOrdersMoreBtn" data-label="MOSTRAR MAIS (' + left + ') <i class=&quot;fa fa-chevron-down&quot;></i>" onclick="vsOrdersMore()" class="pp-btn-ghost" style="border-color:var(--c);color:var(--c)">MOSTRAR MAIS (' + left + ') <i class="fa fa-chevron-down"></i></button></div>';
+    }
+    return html;
   }
 
   function renderWishlistHtml(wishlist, cat) {
