@@ -338,7 +338,8 @@ document.addEventListener('DOMContentLoaded', function () {
       '.acc-card span{font-size:.74rem;color:var(--dim);display:block}' +
       '.acc-orders{background:var(--bg1);border:1px solid var(--brd);border-radius:12px;padding:26px;min-height:284px;box-sizing:border-box}' +
       '.acc-ordgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}' +
-      '.acc-ordcard{background:var(--bg3);border:1px solid var(--brd);border-radius:10px;padding:16px;min-width:0}' +
+      '.acc-ordcard{background:var(--bg3);border:1px solid var(--brd);border-radius:10px;padding:16px;min-width:0;overflow:hidden;overflow-wrap:anywhere}' +
+      '.acc-ordcard code,.acc-ordcard span,.acc-ordcard div,.acc-ordcard b{overflow-wrap:anywhere;word-break:break-word;min-width:0}' +
       '.acc-empty{text-align:center;padding:40px 16px;color:var(--dim)}' +
       '.acc-empty i{font-size:2.4rem;opacity:.4;display:block;margin-bottom:12px}' +
       '.acc-trap{display:inline-block;min-width:190px;min-height:78px;line-height:78px;padding:0 28px;background:var(--c);color:#001318;font-weight:800;letter-spacing:1.5px;transform:skewX(-10deg);border:none;cursor:pointer;font-size:.92rem;text-decoration:none;box-sizing:border-box}' +
