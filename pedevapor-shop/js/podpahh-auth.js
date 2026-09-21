@@ -337,9 +337,11 @@ document.addEventListener('DOMContentLoaded', function () {
       '.acc-card b{color:#fff;font-size:.88rem;display:block}' +
       '.acc-card span{font-size:.74rem;color:var(--dim);display:block}' +
       '.acc-orders{background:var(--bg1);border:1px solid var(--brd);border-radius:12px;padding:26px;min-height:284px;box-sizing:border-box}' +
-      '.acc-ordgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}' +
+      '.acc-ordgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-items:start}' +
       '.acc-ordcard{background:var(--bg3);border:1px solid var(--brd);border-radius:10px;padding:16px;min-width:0;overflow:hidden;overflow-wrap:anywhere}' +
       '.acc-ordcard code,.acc-ordcard span,.acc-ordcard div,.acc-ordcard b{overflow-wrap:anywhere;word-break:break-word;min-width:0}' +
+      '.acc-ordid{display:inline-block;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}' +
+      '.acc-ordaddr{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}' +
       '.acc-empty{text-align:center;padding:40px 16px;color:var(--dim)}' +
       '.acc-empty i{font-size:2.4rem;opacity:.4;display:block;margin-bottom:12px}' +
       '.acc-trap{display:inline-block;min-width:190px;min-height:78px;line-height:78px;padding:0 28px;background:var(--c);color:#001318;font-weight:800;letter-spacing:1.5px;transform:skewX(-10deg);border:none;cursor:pointer;font-size:.92rem;text-decoration:none;box-sizing:border-box}' +
@@ -398,12 +400,12 @@ document.addEventListener('DOMContentLoaded', function () {
         '<span style="color:var(--txt);white-space:nowrap">' + fmtMoney(Number(i.price || 0) * Number(i.qty || 0)) + '</span></div>';
     }).join('');
     return '<div class="acc-ordcard">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">' +
-      '<b style="color:#fff;font-size:.92rem">Pedido <code style="font-size:.75rem;opacity:.7">' + esc(o.id) + '</code></b>' + orderBadge(o.status) + '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">' +
+      '<b style="color:#fff;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Pedido <code class="acc-ordid" title="' + esc(o.id) + '">' + esc(o.id) + '</code></b>' + orderBadge(o.status) + '</div>' +
       '<div style="font-size:.8rem;color:var(--dim);margin-bottom:10px"><i class="fa fa-calendar"></i> ' + fmtDate(o.created_at) + ' &nbsp;|&nbsp; <i class="fa fa-credit-card"></i> ' + esc(o.payment_method || 'PIX') + '</div>' +
       items +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid var(--brd);gap:8px;flex-wrap:wrap">' +
-      '<span style="font-size:.78rem;color:var(--dim)"><i class="fa fa-map-marker-alt"></i> ' + esc(orderAddressText(o)) + '</span>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid var(--brd);gap:8px">' +
+      '<span class="acc-ordaddr" title="' + esc(orderAddressText(o)).replace(/"/g, '&quot;') + '" style="font-size:.78rem;color:var(--dim)"><i class="fa fa-map-marker-alt"></i> ' + esc(orderAddressText(o)) + '</span>' +
       '<b style="color:#4ade80;font-size:1rem;white-space:nowrap">' + fmtMoney(o.total) + '</b></div></div>';
   }
 
