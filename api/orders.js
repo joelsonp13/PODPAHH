@@ -9,5 +9,14 @@ module.exports = async (req, res) => {
     if (!await requireAdmin(req, res)) return;
     return send(res, 200, { success: true, data: await db.getOrders() });
   }
+  // PUT/DELETE com ?id= (o catch-all não casa 2 segmentos no path)
+  if ((req.method === 'PUT' || req.method === 'DELETE') && req.query.id) {
+    if (!await requireAdmin(req, res)) return;
+    if (req.method === 'PUT') {
+      const body = await getBody(req);
+      return send(res, 200, await db.updateOrderStatus(req.query.id, (body || {}).status));
+    }
+    return send(res, 200, await db.deleteOrder(req.query.id));
+  }
   return send(res, 405, { success: false, error: 'Método não permitido.' });
 };

@@ -10,5 +10,12 @@ module.exports = async (req, res) => {
   if (req.method === 'POST') {
     return respondDbResult(res, await db.createAddress(auth.customerId, await getBody(req)));
   }
+  // PUT/DELETE com ?id= (o catch-all não casa 2 segmentos no path)
+  if ((req.method === 'PUT' || req.method === 'DELETE') && req.query.id) {
+    if (req.method === 'PUT') {
+      return respondDbResult(res, await db.updateAddress(auth.customerId, req.query.id, await getBody(req)));
+    }
+    return respondDbResult(res, await db.deleteAddress(auth.customerId, req.query.id));
+  }
   return send(res, 405, { success: false, error: 'Método não permitido.' });
 };

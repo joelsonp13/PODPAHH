@@ -797,7 +797,7 @@
   async function deleteCustomer(id) {
     if (!confirm('Apagar esta conta, seus endereços e favoritos? Os pedidos feitos por ela serão mantidos.')) return;
     try {
-      var res = await fetch(API + '/admin/customers/' + encodeURIComponent(id), { method: 'DELETE', headers: authHeaders() });
+      var res = await fetch(API + '/admin/customers?id=' + encodeURIComponent(id), { method: 'DELETE', headers: authHeaders() });
       var json = await res.json();
       if (json.success) loadAdminData();
       else alert('Erro: ' + (json.error || 'desconhecido'));
@@ -889,7 +889,7 @@
     if (!orderDetailId) return;
     var next = document.getElementById('orderDetailStatus').value;
     try {
-      var res = await fetch(API + '/orders/' + encodeURIComponent(orderDetailId), { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ status: next }) });
+      var res = await fetch(API + '/orders?id=' + encodeURIComponent(orderDetailId), { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ status: next }) });
       var json = await res.json();
       if (json.success) { closeOrderModal(); loadAdminData(); }
       else alert('Erro: ' + (json.error || 'desconhecido'));
@@ -904,7 +904,7 @@
     var next = (normStatus(found.status) === 'confirmado') ? 'pendente' : 'confirmado';
     if (!confirm((next === 'confirmado' ? 'CONFIRMAR' : 'VOLTAR PARA PENDENTE') + ' o pedido ' + id + '?')) return;
     try {
-      var res = await fetch(API + '/orders/' + encodeURIComponent(id), { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ status: next }) });
+      var res = await fetch(API + '/orders?id=' + encodeURIComponent(id), { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ status: next }) });
       var json = await res.json();
       if (json.success) loadAdminData();
       else alert('Erro: ' + (json.error || 'desconhecido'));
@@ -914,7 +914,7 @@
   async function deleteOrder(id) {
     if (!confirm('Apagar o pedido ' + id + '? Esta ação não pode ser desfeita.')) return;
     try {
-      var res = await fetch(API + '/orders/' + encodeURIComponent(id), { method: 'DELETE', headers: authHeaders() });
+      var res = await fetch(API + '/orders?id=' + encodeURIComponent(id), { method: 'DELETE', headers: authHeaders() });
       var json = await res.json();
       if (json.success) loadAdminData();
       else alert('Erro: ' + (json.error || 'desconhecido'));
@@ -1232,7 +1232,7 @@
     (allProducts || []).forEach(function (x) { if (String(x.id) === String(id)) found = x; });
     if (!confirm('Excluir "' + ((found && found.name) || id) + '" do banco de dados?')) return;
     try {
-      var res = await fetch(API + '/admin/products/' + encodeURIComponent(id), { method:'DELETE', headers: authHeaders() });
+      var res = await fetch(API + '/admin/products?id=' + encodeURIComponent(id), { method:'DELETE', headers: authHeaders() });
       var json = await res.json();
       if (json.success) loadAdminData();
     } catch (err) { alert('Erro de conexão.'); }

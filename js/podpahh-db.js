@@ -193,7 +193,7 @@
         return { success: true, data: data[0] };
       } else {
         try {
-          var res = await fetch(LOCAL_API + '/addresses/' + encodeURIComponent(id), {
+          var res = await fetch(LOCAL_API + '/addresses?id=' + encodeURIComponent(id), {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -215,7 +215,7 @@
         return { success: true };
       } else {
         try {
-          var res = await fetch(LOCAL_API + '/addresses/' + encodeURIComponent(id), {
+          var res = await fetch(LOCAL_API + '/addresses?id=' + encodeURIComponent(id), {
             method: 'DELETE',
             headers: { 'Authorization': 'Bearer ' + (token || '') }
           });

@@ -180,6 +180,17 @@ app.delete('/api/orders/:id', requireAdmin, (req, res) => {
   res.json(db.deleteOrder(req.params.id));
 });
 
+// Variantes com ?id= (mesmo contrato do serverless Vercel)
+app.put('/api/orders', requireAdmin, (req, res) => {
+  if (!req.query.id) return res.status(400).json({ success: false, error: 'ID do pedido é obrigatório.' });
+  res.json(db.updateOrderStatus(req.query.id, (req.body || {}).status));
+});
+
+app.delete('/api/orders', requireAdmin, (req, res) => {
+  if (!req.query.id) return res.status(400).json({ success: false, error: 'ID do pedido é obrigatório.' });
+  res.json(db.deleteOrder(req.query.id));
+});
+
 // ---------- ENDEREÇOS DE CLIENTE (PROTEGIDOS) ----------
 app.get('/api/addresses', requireCustomer, (req, res) => {
   res.json({ success: true, data: db.listAddresses(req.customerId) });
@@ -195,6 +206,17 @@ app.put('/api/addresses/:id', requireCustomer, (req, res) => {
 
 app.delete('/api/addresses/:id', requireCustomer, (req, res) => {
   respondDbResult(res, db.deleteAddress(req.customerId, req.params.id));
+});
+
+// Variantes com ?id= (mesmo contrato do serverless Vercel)
+app.put('/api/addresses', requireCustomer, (req, res) => {
+  if (!req.query.id) return res.status(400).json({ success: false, error: 'ID do endereço é obrigatório.' });
+  respondDbResult(res, db.updateAddress(req.customerId, req.query.id, req.body || {}));
+});
+
+app.delete('/api/addresses', requireCustomer, (req, res) => {
+  if (!req.query.id) return res.status(400).json({ success: false, error: 'ID do endereço é obrigatório.' });
+  respondDbResult(res, db.deleteAddress(req.customerId, req.query.id));
 });
 
 // ---------- FAVORITOS DO CLIENTE (WISHLIST POR CONTA) ----------
@@ -239,6 +261,12 @@ app.delete('/api/admin/customers/:id', requireAdmin, (req, res) => {
   res.json(db.deleteCustomer(req.params.id));
 });
 
+// Variante com ?id= (mesmo contrato do serverless Vercel)
+app.delete('/api/admin/customers', requireAdmin, (req, res) => {
+  if (!req.query.id) return res.status(400).json({ success: false, error: 'ID da conta é obrigatório.' });
+  res.json(db.deleteCustomer(req.query.id));
+});
+
 app.get('/api/admin/products', requireAdmin, (req, res) => {
   res.json({ success: true, data: db.getProducts() });
 });
@@ -249,6 +277,12 @@ app.post('/api/admin/products', requireAdmin, (req, res) => {
 
 app.delete('/api/admin/products/:id', requireAdmin, (req, res) => {
   res.json(db.deleteProduct(req.params.id));
+});
+
+// Variante com ?id= (mesmo contrato do serverless Vercel)
+app.delete('/api/admin/products', requireAdmin, (req, res) => {
+  if (!req.query.id) return res.status(400).json({ success: false, error: 'ID do produto é obrigatório.' });
+  res.json(db.deleteProduct(req.query.id));
 });
 
 app.post('/api/admin/import-catalog', requireAdmin, (req, res) => {

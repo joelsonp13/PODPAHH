@@ -5,7 +5,7 @@ const { send, getBody, cors, bearer, requireAdmin, subpath, db } = require('../.
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') { cors(res); return res.status(200).end(); }
   const parts = subpath(req, ['api', 'admin']);
-  const r0 = parts[0], r1 = parts[1];
+  const r0 = parts[0], r1 = parts[1] || req.query.id;
   const body = (req.method === 'POST' || req.method === 'PUT') ? await getBody(req) : {};
 
   // ---- login/logout (sem auth) ----
