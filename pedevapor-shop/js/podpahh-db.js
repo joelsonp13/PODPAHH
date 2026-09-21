@@ -118,6 +118,34 @@
       }
     },
 
+    // Dados da própria conta (nome + WhatsApp; e-mail é imutável)
+    getCustomer: async function(token) {
+      try {
+        var res = await fetch(LOCAL_API + '/customer', {
+          headers: { 'Authorization': 'Bearer ' + (token || '') }
+        });
+        return await res.json();
+      } catch (err) {
+        return { success: false, error: 'Servidor offline.' };
+      }
+    },
+
+    updateCustomer: async function(name, phone, token) {
+      try {
+        var res = await fetch(LOCAL_API + '/customer', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + (token || '')
+          },
+          body: JSON.stringify({ name: name, phone: phone })
+        });
+        return await res.json();
+      } catch (err) {
+        return { success: false, error: 'Servidor offline.' };
+      }
+    },
+
     // Endereços do cliente
     getAddresses: async function(token) {
       if (MODE === 'supabase' && supabaseClient) {

@@ -228,22 +228,130 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function getAccountTab() {
-    try { return sessionStorage.getItem('podpahh_account_tab') || 'orders'; }
-    catch (e) { return 'orders'; }
+    try {
+      var t = sessionStorage.getItem('podpahh_account_tab') || 'painel';
+      if (t === 'orders') return 'orders';
+      return t;
+    } catch (e) { return 'painel'; }
   }
 
+  var ACC_TABS = ['painel', 'orders', 'addresses', 'dados', 'wishlist'];
+
   window.vsAccountTab = function(name) {
+    if (ACC_TABS.indexOf(name) === -1) name = 'painel';
     try { sessionStorage.setItem('podpahh_account_tab', name); } catch (e) {}
-    ['orders', 'addresses', 'wishlist'].forEach(function (t) {
+    ACC_TABS.forEach(function (t) {
       var panel = document.getElementById('accTab-' + t);
       var btn = document.getElementById('accBtn-' + t);
       if (panel) panel.style.display = (t === name) ? 'block' : 'none';
-      if (btn) {
-        btn.style.borderColor = (t === name) ? 'var(--c)' : 'var(--brd)';
-        btn.style.color = (t === name) ? 'var(--c)' : 'var(--dim)';
-      }
+      if (btn) btn.classList.toggle('on', t === name);
     });
   };
+
+  window.vsAccountLogout = function() { window.vsLogout(); };
+
+  function bindProfileMask() {
+    var el = document.getElementById('acc_edit_phone');
+    if (!el || el.getAttribute('data-mask')) return;
+    el.setAttribute('data-mask', '1');
+    el.addEventListener('input', function () {
+      var raw = String(el.value || '').replace(/\D/g, '').substring(0, 11);
+      if (!raw) { el.value = ''; return; }
+      if (raw.length <= 2) el.value = '(' + raw;
+      else if (raw.length <= 6) el.value = '(' + raw.substring(0, 2) + ') ' + raw.substring(2);
+      else if (raw.length <= 10) el.value = '(' + raw.substring(0, 2) + ') ' + raw.substring(2, 6) + '-' + raw.substring(6);
+      else el.value = '(' + raw.substring(0, 2) + ') ' + raw.substring(2, 7) + '-' + raw.substring(7);
+    });
+  }
+
+  window.vsSaveProfile = async function(e) {
+    if (e) e.preventDefault();
+    var sess = getSession();
+    if (!sess || !sess.token || !window.PodpahhDB || !window.PodpahhDB.updateCustomer) {
+      alert('Sessão expirada. Faça login novamente.');
+      return;
+    }
+    var nameEl = document.getElementById('acc_edit_name');
+    var phoneEl = document.getElementById('acc_edit_phone');
+    var msgEl = document.getElementById('acc_profile_msg');
+    var name = nameEl ? nameEl.value.trim() : '';
+    var digits = phoneEl ? String(phoneEl.value || '').replace(/\D/g, '') : '';
+    if (name.length < 2) { alert('Informe seu nome completo.'); return; }
+    if (digits.length !== 11) {
+      alert('Informe um WhatsApp válido com DDD (ex: (41) 99999-9999).');
+      if (phoneEl) phoneEl.focus();
+      return;
+    }
+    try {
+      var res = await window.PodpahhDB.updateCustomer(name, digits, sess.token);
+      if (!res || !res.success) {
+        if (msgEl) { msgEl.textContent = res && res.error ? res.error : 'Erro ao salvar.'; msgEl.style.color = '#ff5252'; }
+        else alert(res && res.error ? res.error : 'Erro ao salvar.');
+        return;
+      }
+      try {
+        var s1 = JSON.parse(localStorage.getItem('podpahh_session_v1'));
+        if (s1 && s1.user) { s1.user.name = res.data.name; s1.user.phone = res.data.phone; localStorage.setItem('podpahh_session_v1', JSON.stringify(s1)); }
+        localStorage.setItem('podpahh_logged_user', JSON.stringify(res.data));
+      } catch (e2) {}
+      if (msgEl) { msgEl.textContent = 'Dados atualizados com sucesso!'; msgEl.style.color = '#4ade80'; }
+      setTimeout(function () { window.location.reload(); }, 800);
+    } catch (err) {
+      alert('Erro de conexão ao salvar.');
+    }
+  };
+
+  function ensureAccStyle() {
+    if (document.getElementById('acc-style')) return;
+    var css = '.acc-shell{max-width:1090px;margin:0 auto}' +
+      '.acc-topline{height:1px;background:var(--brd);margin-bottom:18px}' +
+      '.acc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}' +
+      '.acc-eyebrow{color:var(--c);font-size:.75rem;letter-spacing:3px;font-weight:700}' +
+      '.acc-title{font-family:\'Barlow Condensed\',sans-serif;font-size:2rem;color:#fff;margin:2px 0 0;letter-spacing:1px;display:flex;align-items:center;gap:10px}' +
+      '.acc-title i{color:var(--c)}' +
+      '.acc-usercard{display:flex;align-items:center;gap:12px;background:var(--bg3);border:1px solid var(--brd);border-radius:10px;padding:10px 18px 10px 10px}' +
+      '.acc-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--c),#1a56db);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;color:#fff;flex-shrink:0}' +
+      '.acc-avatar.big{width:76px;height:76px;font-size:2rem}' +
+      '.acc-uname{color:#fff;font-weight:700;font-size:.95rem}' +
+      '.acc-umail{color:var(--dim);font-size:.78rem}' +
+      '.acc-body{display:flex;gap:24px;margin-top:20px;align-items:flex-start}' +
+      '.acc-side{width:240px;flex-shrink:0;background:var(--bg1);border:1px solid var(--brd);border-radius:12px;padding:12px;min-height:397px;display:flex;flex-direction:column}' +
+      '.acc-menu{display:flex;flex-direction:column;gap:4px}' +
+      '.acc-mi{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--dim);font-size:.88rem;font-weight:600;cursor:pointer;width:100%;text-align:left}' +
+      '.acc-mi i{width:18px;text-align:center}' +
+      '.acc-mi:hover{color:#fff;background:rgba(255,255,255,.03)}' +
+      '.acc-mi.on{background:rgba(0,220,255,.08);border-color:var(--c);color:var(--c)}' +
+      '.acc-mi.danger{color:#ff5252}' +
+      '.acc-sidefoot{margin-top:auto;padding-top:12px;display:flex;gap:8px}' +
+      '.acc-footbox{flex:1;background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:10px;text-align:center}' +
+      '.acc-footbox b{color:#fff;font-size:1.1rem;display:block}' +
+      '.acc-footbox span{font-size:.68rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px}' +
+      '.acc-main{flex:1;min-width:0}' +
+      '.acc-welcome{position:relative;background:var(--bg1);border:1px solid var(--brd);border-top:3px solid var(--c);border-radius:12px;padding:22px;min-height:137px;display:flex;justify-content:space-between;align-items:center;gap:16px;overflow:hidden;box-sizing:border-box}' +
+      '.acc-welcome:after{content:\'\';position:absolute;top:0;right:0;width:56px;height:3px;background:#ff2fb3}' +
+      '.acc-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}' +
+      '.acc-card{background:var(--bg1);border:1px solid var(--brd);border-radius:10px;padding:14px;display:flex;gap:10px;align-items:center;cursor:pointer;text-align:left;color:var(--txt);width:100%}' +
+      '.acc-card:hover{border-color:var(--c)}' +
+      '.acc-card i{font-size:1.25rem;color:var(--c);flex-shrink:0}' +
+      '.acc-card b{color:#fff;font-size:.88rem;display:block}' +
+      '.acc-card span{font-size:.74rem;color:var(--dim);display:block}' +
+      '.acc-orders{background:var(--bg1);border:1px solid var(--brd);border-radius:12px;padding:26px;min-height:284px;box-sizing:border-box}' +
+      '.acc-empty{text-align:center;padding:40px 16px;color:var(--dim)}' +
+      '.acc-empty i{font-size:2.4rem;opacity:.4;display:block;margin-bottom:12px}' +
+      '.acc-trap{display:inline-block;min-width:190px;min-height:78px;line-height:78px;padding:0 28px;background:var(--c);color:#001318;font-weight:800;letter-spacing:1.5px;transform:skewX(-10deg);border:none;cursor:pointer;font-size:.92rem;text-decoration:none;box-sizing:border-box}' +
+      '.acc-trap>span{display:inline-block;transform:skewX(10deg)}' +
+      '.acc-panel{background:var(--bg1);border:1px solid var(--brd);border-radius:12px;padding:22px;box-sizing:border-box}' +
+      '.acc-h3{margin:0 0 14px;font-family:\'Barlow Condensed\',sans-serif;font-size:1.25rem;letter-spacing:1.5px;color:#fff}' +
+      '.acc-h3 i{color:var(--c)}' +
+      '.acc-field{margin-bottom:12px}' +
+      '.acc-field label{font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px;font-weight:600}' +
+      '.acc-field input{width:100%;background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:10px;font-size:.9rem;border-radius:6px;box-sizing:border-box}' +
+      '@media(max-width:900px){.acc-body{flex-direction:column}.acc-side{width:100%;min-height:0}.acc-cards{grid-template-columns:repeat(2,1fr)}.acc-top{flex-direction:column}}';
+    var st = document.createElement('style');
+    st.id = 'acc-style';
+    st.textContent = css;
+    document.head.appendChild(st);
+  }
 
   window.vsAccountUnwish = async function(pid, mid) {
     var sess = getSession();
@@ -380,35 +488,65 @@ document.addEventListener('DOMContentLoaded', function () {
     var memberSince = '—';
     try { if (user.created_at) memberSince = new Date(user.created_at).toLocaleDateString('pt-BR'); } catch (e) {}
     var initial = esc(String(user.name || 'C').charAt(0).toUpperCase());
+    var firstName = esc(String(user.name || 'cliente').split(' ')[0]);
+    var activeTab = getAccountTab();
+    ensureAccStyle();
+    try {
+      var cpHead = document.querySelector('.cp-header');
+      if (cpHead) cpHead.style.display = 'none';
+    } catch (e) {}
 
-    wrap.innerHTML = '<div style="background:var(--bg1);border:1px solid var(--brd);padding:30px;border-radius:12px;color:var(--txt)">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--brd);padding-bottom:16px;margin-bottom:20px;flex-wrap:wrap;gap:12px">' +
-      '<div style="display:flex;align-items:center;gap:14px">' +
-      '<div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--c),#1a56db);display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:800;color:#fff;flex-shrink:0">' + initial + '</div>' +
-      '<div>' +
-      '<h2 style="margin:0 0 4px;font-family:\'Barlow Condensed\',sans-serif;font-size:1.5rem;letter-spacing:1px;color:#fff">' + esc(user.name) + '</h2>' +
-      '<p style="margin:0;color:var(--dim);font-size:.85rem"><i class="fa fa-envelope"></i> ' + esc(user.email) + ' &nbsp;|&nbsp; <i class="fa-brands fa-whatsapp"></i> ' + esc(fmtPhone(user.phone)) + '</p>' +
-      '<p style="margin:2px 0 0;color:var(--dim);font-size:.78rem"><i class="fa fa-calendar"></i> Cliente desde ' + esc(memberSince) + '</p>' +
-      '</div></div>' +
-      '<button onclick="vsLogout()" class="pp-btn-ghost" style="border-color:rgba(255,50,50,.3);color:#ff5252"><i class="fa fa-sign-out-alt"></i> SAIR DA CONTA</button>' +
+    var recentOrders = orders.slice(0, 3);
+    var recentHtml = recentOrders.length
+      ? recentOrders.map(function (o) {
+        return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px dashed rgba(255,255,255,.08);font-size:.85rem;flex-wrap:wrap">' +
+          '<span style="color:var(--txt)"><code style="font-size:.72rem;opacity:.7">' + esc(o.id) + '</code> &nbsp; ' + fmtDate(o.created_at) + '</span>' +
+          '<span style="display:flex;align-items:center;gap:10px">' + orderBadge(o.status) + '<b style="color:#4ade80">' + fmtMoney(o.total) + '</b></span></div>';
+      }).join('') +
+      '<div style="text-align:right;margin-top:10px"><button onclick="vsAccountTab(\'orders\')" class="pp-btn-ghost" style="font-size:.78rem">VER TODOS <i class="fa fa-arrow-right"></i></button></div>'
+      : '<div class="acc-empty"><i class="fa fa-receipt"></i><p style="margin:0 0 18px">Você ainda não fez nenhum pedido.</p>' +
+      '<a href="loja.html" class="acc-trap"><span>IR PARA A LOJA</span></a></div>';
+
+    wrap.innerHTML = '<div class="acc-shell">' +
+      '<div class="acc-topline"></div>' +
+      '<div class="acc-top">' +
+      '<div><div class="acc-eyebrow">// CONTA</div>' +
+      '<h1 class="acc-title"><i class="fa fa-user-circle"></i> MINHA CONTA</h1></div>' +
+      '<div class="acc-usercard"><div class="acc-avatar">' + initial + '</div>' +
+      '<div><div class="acc-uname">' + esc(user.name) + '</div><div class="acc-umail">' + esc(user.email) + '</div></div></div>' +
       '</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">' +
-      '<div style="background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:12px;text-align:center"><b style="font-size:1.3rem;color:#fff;display:block">' + orders.length + '</b><span style="font-size:.72rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px"><i class="fa fa-receipt"></i> Pedidos</span></div>' +
-      '<div style="background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:12px;text-align:center"><b style="font-size:1.3rem;color:#fff;display:block">' + addresses.length + '</b><span style="font-size:.72rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px"><i class="fa fa-map-marker-alt"></i> Endereços</span></div>' +
-      '<div style="background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:12px;text-align:center"><b style="font-size:1.3rem;color:#fff;display:block">' + wishlist.length + '</b><span style="font-size:.72rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px"><i class="fa fa-heart"></i> Favoritos</span></div>' +
+      '<div class="acc-body">' +
+      '<aside class="acc-side"><nav class="acc-menu">' +
+      '<button id="accBtn-painel" class="acc-mi" onclick="vsAccountTab(\'painel\')"><i class="fa fa-grid-2"></i> Painel</button>' +
+      '<button id="accBtn-orders" class="acc-mi" onclick="vsAccountTab(\'orders\')"><i class="fa fa-receipt"></i> Meus Pedidos</button>' +
+      '<button id="accBtn-addresses" class="acc-mi" onclick="vsAccountTab(\'addresses\')"><i class="fa fa-map-marker-alt"></i> Endereços</button>' +
+      '<button id="accBtn-dados" class="acc-mi" onclick="vsAccountTab(\'dados\')"><i class="fa fa-id-card"></i> Dados da Conta</button>' +
+      '<button id="accBtn-wishlist" class="acc-mi" onclick="vsAccountTab(\'wishlist\')"><i class="fa fa-heart"></i> Favoritos</button>' +
+      '<button class="acc-mi danger" onclick="vsAccountLogout()"><i class="fa fa-right-from-bracket"></i> Sair</button>' +
+      '</nav><div class="acc-sidefoot"><div class="acc-footbox"><b>' + orders.length + '</b><span>Pedidos</span></div></div></aside>' +
+      '<div class="acc-main">' +
+      '<div id="accTab-painel">' +
+      '<div class="acc-welcome"><div>' +
+      '<div class="acc-eyebrow">// PAINEL DO CLIENTE</div>' +
+      '<h2 style="margin:4px 0 6px;color:#fff;font-size:1.4rem">Olá, ' + firstName + '!</h2>' +
+      '<p style="margin:0;color:var(--dim);font-size:.85rem">Acompanhe seus pedidos, endereços e favoritos por aqui.</p>' +
+      '</div><div class="acc-avatar big">' + initial + '</div></div>' +
+      '<div class="acc-cards">' +
+      '<button class="acc-card" onclick="vsAccountTab(\'orders\')"><i class="fa fa-receipt"></i><div><b>Meus Pedidos</b><span>' + orders.length + ' pedido(s)</span></div></button>' +
+      '<button class="acc-card" onclick="vsAccountTab(\'addresses\')"><i class="fa fa-map-marker-alt"></i><div><b>Endereços</b><span>' + addresses.length + ' salvo(s)</span></div></button>' +
+      '<button class="acc-card" onclick="vsAccountTab(\'dados\')"><i class="fa fa-id-card"></i><div><b>Meus Dados</b><span>' + esc(fmtPhone(user.phone)) + '</span></div></button>' +
+      '<button class="acc-card" onclick="vsAccountTab(\'wishlist\')"><i class="fa fa-heart"></i><div><b>Favoritos</b><span>' + wishlist.length + ' item(ns)</span></div></button>' +
       '</div>' +
-      '<div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">' +
-      '<button id="accBtn-orders" onclick="vsAccountTab(\'orders\')" class="pp-btn-ghost" style="flex:1;min-width:120px"><i class="fa fa-receipt"></i> MEUS PEDIDOS (' + orders.length + ')</button>' +
-      '<button id="accBtn-addresses" onclick="vsAccountTab(\'addresses\')" class="pp-btn-ghost" style="flex:1;min-width:120px"><i class="fa fa-map-marker-alt"></i> ENDEREÇOS (' + addresses.length + ')</button>' +
-      '<button id="accBtn-wishlist" onclick="vsAccountTab(\'wishlist\')" class="pp-btn-ghost" style="flex:1;min-width:120px"><i class="fa fa-heart"></i> FAVORITOS (' + wishlist.length + ')</button>' +
+      '<div class="acc-orders">' + recentHtml + '</div>' +
       '</div>' +
-      '<div id="accTab-orders">' +
-      '<h3 style="margin:0 0 12px;font-family:\'Barlow Condensed\',sans-serif;font-size:1.2rem;letter-spacing:1.5px;color:#fff"><i class="fa fa-receipt" style="color:var(--c)"></i> HISTÓRICO DE PEDIDOS</h3>' +
+      '<div id="accTab-orders" style="display:none">' +
+      '<div class="acc-panel"><h3 class="acc-h3"><i class="fa fa-receipt"></i> HISTÓRICO DE PEDIDOS</h3>' +
       renderOrdersHtml(orders) +
-      '</div>' +
+      '</div></div>' +
       '<div id="accTab-addresses" style="display:none">' +
+      '<div class="acc-panel">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">' +
-      '<h3 style="margin:0;font-family:\'Barlow Condensed\',sans-serif;font-size:1.2rem;letter-spacing:1.5px;color:#fff"><i class="fa fa-map-marker-alt" style="color:var(--c)"></i> MEUS ENDEREÇOS</h3>' +
+      '<h3 class="acc-h3" style="margin:0"><i class="fa fa-map-marker-alt"></i> MEUS ENDEREÇOS</h3>' +
       '<button onclick="vsToggleAccountAddressForm(true)" class="pp-btn-ghost" style="border-color:var(--c);color:var(--c)"><i class="fa fa-plus"></i> ADICIONAR ENDEREÇO</button>' +
       '</div>' +
       addrHtml +
@@ -442,12 +580,25 @@ document.addEventListener('DOMContentLoaded', function () {
       '</div>' +
       '</form>' +
       '</div>' +
-      '</div>' +
+      '</div></div>' +
+      '<div id="accTab-dados" style="display:none">' +
+      '<div class="acc-panel"><h3 class="acc-h3"><i class="fa fa-id-card"></i> DADOS DA CONTA</h3>' +
+      '<form onsubmit="vsSaveProfile(event)">' +
+      '<div class="acc-field"><label>NOME COMPLETO *</label><input type="text" id="acc_edit_name" required value="' + esc(user.name).replace(/"/g, '&quot;') + '"></div>' +
+      '<div class="acc-field"><label>WHATSAPP (DDD + NÚMERO) *</label><input type="tel" id="acc_edit_phone" required maxlength="15" value="' + esc(fmtPhone(user.phone)).replace(/"/g, '&quot;') + '"></div>' +
+      '<div class="acc-field"><label>E-MAIL (NÃO PODE SER ALTERADO)</label><input type="email" value="' + esc(user.email).replace(/"/g, '&quot;') + '" disabled style="opacity:.55"></div>' +
+      '<div class="acc-field"><label>CLIENTE DESDE</label><input type="text" value="' + esc(memberSince) + '" disabled style="opacity:.55"></div>' +
+      '<div id="acc_profile_msg" style="font-size:.85rem;margin-bottom:10px"></div>' +
+      '<button type="submit" class="pp-btn-ghost" style="width:100%;border-color:var(--c);color:var(--c)"><i class="fa fa-save"></i> SALVAR DADOS</button>' +
+      '</form></div></div>' +
       '<div id="accTab-wishlist" style="display:none">' +
-      '<h3 style="margin:0 0 12px;font-family:\'Barlow Condensed\',sans-serif;font-size:1.2rem;letter-spacing:1.5px;color:#fff"><i class="fa fa-heart" style="color:var(--c)"></i> MEUS FAVORITOS</h3>' +
+      '<div class="acc-panel"><h3 class="acc-h3"><i class="fa fa-heart"></i> MEUS FAVORITOS</h3>' +
       renderWishlistHtml(wishlist, cat) +
+      '</div></div>' +
+      '</div>' +
       '</div>' +
       '</div>';
+    bindProfileMask();
     window.vsAccountTab(activeTab);
   }
 

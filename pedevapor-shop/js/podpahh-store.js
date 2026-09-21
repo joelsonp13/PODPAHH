@@ -287,6 +287,29 @@
     try { return JSON.parse(localStorage.getItem('podpahh_logged_user')); } catch (e) { return null; }
   }
 
+  function getSessionToken() {
+    try {
+      var s = JSON.parse(localStorage.getItem('podpahh_session_v1'));
+      if (s && s.token) return s.token;
+    } catch (e) {}
+    return null;
+  }
+
+  // WhatsApp válido: 10 ou 11 dígitos, DDD 11-99 (11 dígitos = celular com 9)
+  function validCustomerPhone(v) {
+    var d = String(v || '').replace(/\D/g, '');
+    if (d.length !== 10 && d.length !== 11) return '';
+    var ddd = parseInt(d.substring(0, 2), 10);
+    if (ddd < 11 || ddd > 99) return '';
+    if (d.length === 11 && d[2] !== '9') return '';
+    return d;
+  }
+
+  function loginRedirect(msg) {
+    if (msg) alert(msg);
+    window.location.href = base() + '/pages/minha-conta.html';
+  }
+
   function buildOrderMessage() {
     var cart = loadCart(), cat = loadCatalog();
     var user = loggedUser();
@@ -315,7 +338,7 @@
     if (window.__podpahh_selected_address_text) {
       lines.push(window.__podpahh_selected_address_text.split('\n').map(l => l ? '   ' + l : l).join('\n'));
     } else {
-      lines.push('   (a confirmar por aqui no chat 😉)');
+      lines.push('   [endereço não selecionado — pedido bloqueado]');
     }
     lines.push('💳 Forma de pagamento: (responder: PIX ou Cartão)');
     lines.push('');
@@ -439,7 +462,7 @@
     if (!v.city) return 'Informe a cidade.';
     if (!/^[A-Z]{2}$/.test(v.state)) return 'Informe a UF (2 letras).';
     if (!v.recipient_name) return 'Informe quem vai receber.';
-    if (v.phone.length !== 10 && v.phone.length !== 11) return 'Informe telefone com DDD (10 ou 11 dígitos).';
+    if (!validCustomerPhone(v.phone)) return 'Informe um telefone válido com DDD (ex: (41) 99999-9999).';
     return null;
   }
 
@@ -471,9 +494,15 @@
   }
 
   // Envia o endereço ao servidor. Retorna Promise<addr|null>.
+  // Exige sessão válida (token): sem token, manda para o login.
   function submitAddressToServer(v) {
-    return window.PodpahhDB.createAddress({
-      label: v.label,
+    var token = getSessionToken();
+    if (!token) {
+      loginRedirect('Sua sessão expirou. Entre novamente para salvar o endereço.');
+      return Promise.resolve(null);
+    }
+    return window.PodpahhDB.saveAddress({
+      label: v.label || 'Casa',
       recipient_name: v.recipient_name,
       phone: v.phone,
       postal_code: v.postal_code,
@@ -484,7 +513,7 @@
       city: v.city,
       state: v.state,
       is_default: false
-    }).then(function (r) {
+    }, token).then(function (r) {
       if (!r.success) {
         if (/sessão|expirad|autorizado/i.test(r.error || '')) {
           alert('Sua sessão expirou. Entre novamente na sua conta.');
@@ -580,70 +609,81 @@
     ov.addEventListener('click', function (e) { if (e.target === ov) closeAddressModal(); });
   }
 
-  // Prossegue após endereço confirmado: salva pedido + abre WhatsApp
-  // addr pode ser null (fallback: endereço será informado no chat)
+  // Prossegue após endereço confirmado: salva pedido + abre WhatsApp.
+  // Endereço é OBRIGATÓRIO: sem addr, nada acontece (sem fallback de chat).
   function proceedAfterAddress(addr) {
     closeAddressModal();
-    window.__podpahh_selected_address_text = addr ? formatAddressText(addr) : '';
-    var cart = loadCart(), cat = loadCatalog(), user = loggedUser();
-    if (window.PodpahhDB && window.PodpahhDB.saveOrder) {
-      var items = Object.keys(cart).map(function (k) {
-        var p = cat[k] || {};
-        return { id: k, name: p.name || k, price: p.price || 0, qty: cart[k].qty };
-      });
-      var sub = 0;
-      items.forEach(function (i) { sub += i.price * i.qty; });
-      var order = {
-        items: items,
-        subtotal: sub,
-        total: sub,
-        customer_id: user && user.id,
-        customer_name: user && user.name,
-        customer_phone: user && user.phone,
-        address: '',
-        payment_method: 'PIX'
-      };
-      if (addr) {
-        order.address_id = addr.id;
-        order.address = formatAddressText(addr);
-      }
-      window.PodpahhDB.saveOrder(order).catch(function (e) { console.warn('Falha ao registrar pedido no banco:', e); });
+    if (!addr || !addr.id) {
+      alert('Escolha ou cadastre um endereço de entrega para finalizar.');
+      return;
     }
-    window.open(checkoutUrl(), '_blank');
+    var cart = loadCart(), cat = loadCatalog(), user = loggedUser();
+    var addrText = formatAddressText(addr);
+    window.__podpahh_selected_address_text = addrText;
+    if (!window.PodpahhDB || !window.PodpahhDB.saveOrder) {
+      alert('Servidor indisponível. Tente novamente em instantes.');
+      return;
+    }
+    var items = Object.keys(cart).map(function (k) {
+      var p = cat[k] || {};
+      return { id: k, name: p.name || k, price: p.price || 0, qty: cart[k].qty };
+    });
+    var sub = 0;
+    items.forEach(function (i) { sub += i.price * i.qty; });
+    window.PodpahhDB.saveOrder({
+      items: items,
+      subtotal: sub,
+      total: sub,
+      customer_id: user && user.id,
+      customer_name: user && user.name,
+      customer_phone: user && user.phone,
+      address_id: addr.id,
+      address: addrText,
+      payment_method: 'PIX'
+    }).then(function (r) {
+      if (!r || !r.success) {
+        alert(r && r.error ? r.error : 'Pedido recusado: confira endereço e WhatsApp.');
+        return;
+      }
+      window.open(checkoutUrl(), '_blank');
+    }).catch(function () {
+      alert('Falha de conexão ao registrar o pedido. Tente novamente.');
+    });
   }
 
   window.vsCheckout = function () {
     var cart = loadCart();
     if (!Object.keys(cart).length) { alert('Seu carrinho está vazio.'); return; }
     var user = loggedUser();
-    // Nome e WhatsApp já foram informados no CADASTRO — o checkout NÃO pede de novo.
-    // Se não estiver logado, encaminha para a conta (login/cadastro) primeiro.
-    if (!user || !user.name || !user.phone) {
-      if (window.confirm('Para finalizar o pedido com o seu nome e WhatsApp já cadastrados, é preciso entrar na sua conta.\n\nIr para a página Minha Conta?')) {
-        window.location.href = base() + '/pages/minha-conta.html';
-      }
+    // Nome e WhatsApp VÁLIDO já vêm do cadastro — sem eles, volta pra conta.
+    if (!user || !user.name || !validCustomerPhone(user.phone)) {
+      loginRedirect('Para finalizar, entre na sua conta com nome e WhatsApp válidos.\n\nIr para Minha Conta?');
       return;
     }
-    // ENDEREÇO OBRIGATÓRIO: busca os endereços do cliente no servidor
-    if (!window.PodpahhDB || !window.PodpahhDB.listAddresses) {
-      // sem biblioteca DB: segue o fluxo antigo (endereço informado no chat)
-      proceedAfterAddress(null);
+    var token = getSessionToken();
+    if (!token) {
+      loginRedirect('Sua sessão expirou. Entre novamente para finalizar o pedido.');
       return;
     }
-    window.PodpahhDB.listAddresses().then(function (r) {
+    // ENDEREÇO OBRIGATÓRIO: busca os endereços do cliente no servidor.
+    if (!window.PodpahhDB || !window.PodpahhDB.getAddresses) {
+      alert('Servidor indisponível. Tente novamente em instantes.');
+      return;
+    }
+    window.PodpahhDB.getAddresses(token).then(function (r) {
       var addresses = (r && r.success && Array.isArray(r.data)) ? r.data : [];
+      if (!r || !r.success) {
+        alert((r && r.error) || 'Não foi possível carregar seus endereços. Tente novamente.');
+        return;
+      }
       if (!addresses.length) {
         // Cliente sem endereços: abre direto o formulário de cadastro
         openAddressForm(null, [], proceedAfterAddress);
       } else {
         openAddressPicker(addresses, proceedAfterAddress);
       }
-    }).catch(function (e) {
-      console.warn('Falha ao listar endereços:', e);
-      // servidor offline: permite seguir com endereço no chat
-      if (window.confirm('Não foi possível carregar seus endereços salvos (servidor offline?).\n\nDeseja informar o endereço pelo WhatsApp mesmo assim?')) {
-        proceedAfterAddress(null);
-      }
+    }).catch(function () {
+      alert('Falha de conexão. Verifique a internet e tente novamente.');
     });
   };
   window.vsClearCart = function () { saveCart({}); };

@@ -294,16 +294,27 @@
     return null;
   }
 
+  // WhatsApp válido: 10 ou 11 dígitos, DDD 11-99 (11 dígitos = celular com 9)
+  function validCustomerPhone(v) {
+    var d = String(v || '').replace(/\D/g, '');
+    if (d.length !== 10 && d.length !== 11) return '';
+    var ddd = parseInt(d.substring(0, 2), 10);
+    if (ddd < 11 || ddd > 99) return '';
+    if (d.length === 11 && d[2] !== '9') return '';
+    return d;
+  }
+
   var cachedAddresses = [];
   var selectedAddressId = null;
 
   async function loadCartAddresses() {
     var user = loggedUser();
     var token = getSessionToken();
-    if (!user || !token || !window.PodpahhDB || !window.PodpahhDB.getAddresses) {
+    if (!user || !token) {
       cachedAddresses = [];
       selectedAddressId = null;
-      renderCartAddressSection();
+      if (user && !token) renderStaleSessionNotice();
+      else renderCartAddressSection();
       return;
     }
     try {
@@ -364,6 +375,10 @@
       alert('Por favor, preencha todos os campos obrigatórios do endereço.');
       return;
     }
+    if (!validCustomerPhone(data.phone)) {
+      alert('Informe um WhatsApp válido com DDD no endereço (ex: (41) 99999-9999).');
+      return;
+    }
     try {
       var res = await window.PodpahhDB.saveAddress(data, token);
       if (!res || !res.success) {
@@ -382,6 +397,16 @@
   function getSelectedAddress() {
     if (!selectedAddressId || !cachedAddresses.length) return null;
     return cachedAddresses.find(function(a) { return a.id === selectedAddressId; }) || cachedAddresses[0];
+  }
+
+  // Sessão legada (sem token): endereços não carregam — força novo login.
+  function renderStaleSessionNotice() {
+    var mount = $('#cartAddressMount');
+    if (!mount) return;
+    mount.innerHTML = '<div style="background:var(--bg3);border:1px solid var(--brd);padding:14px;border-radius:8px;margin-bottom:16px;text-align:center">' +
+      '<p style="font-size:.85rem;margin:0 0 10px;color:var(--txt)">Sua sessão é antiga. Entre novamente para usar seus endereços.</p>' +
+      '<a href="../pages/minha-conta.html" class="pp-btn-ghost" style="display:inline-block;border-color:var(--c);color:var(--c)"><i class="fa fa-user"></i> ENTRAR NOVAMENTE</a>' +
+      '</div>';
   }
 
   function renderCartAddressSection() {
@@ -536,10 +561,15 @@
     var cart = loadCart();
     if (!Object.keys(cart).length) { alert('Seu carrinho está vazio.'); return; }
     var user = loggedUser();
-    if (!user) {
-      if (confirm('Para finalizar a compra, é necessário fazer login. Ir para a página Minha Conta?')) {
+    if (!user || !user.name || !validCustomerPhone(user.phone)) {
+      if (confirm('Para finalizar a compra, entre na sua conta com nome e WhatsApp válidos. Ir para a página Minha Conta?')) {
         window.location.href = base() + '/pages/minha-conta.html';
       }
+      return;
+    }
+    if (!getSessionToken()) {
+      alert('Sua sessão expirou. Entre novamente para finalizar o pedido.');
+      window.location.href = base() + '/pages/minha-conta.html';
       return;
     }
     var addr = getSelectedAddress();
@@ -548,7 +578,8 @@
       return;
     }
     var cat = loadCatalog();
-    // Registra o pedido no banco de dados ANTES de abrir o WhatsApp
+    // Registra o pedido no banco ANTES de abrir o WhatsApp.
+    // Recusado (sem endereço/telefone válido) = não abre o chat.
     if (window.PodpahhDB && window.PodpahhDB.saveOrder) {
       var items = Object.keys(cart).map(function (k) {
         var p = cat[k] || {};
@@ -566,9 +597,18 @@
         address_id: addr.id,
         address: addr.street + ', ' + addr.number + (addr.complement ? ' ' + addr.complement : '') + ' - ' + addr.neighborhood + ', ' + addr.city + '/' + addr.state + ' (CEP: ' + addr.postal_code + ')',
         payment_method: 'PIX'
-      }).catch(function (e) { console.warn('Falha ao registrar pedido no banco:', e); });
+      }).then(function (res) {
+        if (!res || !res.success) {
+          alert(res && res.error ? res.error : 'Pedido recusado: confira endereço e WhatsApp.');
+          return;
+        }
+        window.open(checkoutUrl(), '_blank');
+      }).catch(function () {
+        alert('Falha de conexão ao registrar o pedido. Tente novamente.');
+      });
+      return;
     }
-    window.open(checkoutUrl(), '_blank');
+    alert('Servidor indisponível. Tente novamente em instantes.');
   };
   window.vsClearCart = function () { saveCart({}); };
 

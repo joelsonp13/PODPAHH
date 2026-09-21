@@ -93,6 +93,8 @@ test('order saves address snapshot correctly', () => {
     items: [{ id: 'prod_1', name: 'Pod', price: 50, qty: 1 }],
     subtotal: 50,
     total: 45,
+    customer_name: 'Cliente Teste',
+    customer_phone: '41999999999',
     address_id: 'addr_999',
     address: 'Rua Teste, 123 - Centro, Curitiba/PR',
     payment_method: 'PIX'
@@ -100,4 +102,21 @@ test('order saves address snapshot correctly', () => {
   assert.equal(orderRes.success, true);
   assert.equal(orderRes.data.address_id, 'addr_999');
   assert.match(orderRes.data.address, /Curitiba\/PR/);
+  assert.equal(orderRes.data.status, 'pendente');
+});
+
+test('order rejects missing address, phone or items', () => {
+  const base = {
+    items: [{ id: 'prod_1', name: 'Pod', price: 50, qty: 1 }],
+    subtotal: 50,
+    total: 50,
+    customer_name: 'Cliente Teste',
+    customer_phone: '41999999999',
+    address: 'Rua Teste, 123'
+  };
+  assert.equal(db.saveOrder({ ...base, address: '' }).success, false);
+  assert.equal(db.saveOrder({ ...base, customer_phone: '123' }).success, false);
+  assert.equal(db.saveOrder({ ...base, customer_name: '' }).success, false);
+  assert.equal(db.saveOrder({ ...base, items: [] }).success, false);
+  assert.equal(db.saveOrder({ ...base, total: 0 }).success, false);
 });

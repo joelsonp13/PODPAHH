@@ -131,6 +131,17 @@ app.post('/api/auth/logout', requireCustomer, (req, res) => {
   res.json({ success: true });
 });
 
+// Dados da própria conta (Minha Conta > Dados): nome + WhatsApp.
+app.get('/api/customer', requireCustomer, (req, res) => {
+  const me = db.getCustomers().find(c => String(c.id) === String(req.customerId));
+  if (!me) return res.status(404).json({ success: false, error: 'Conta não encontrada.' });
+  res.json({ success: true, data: me });
+});
+
+app.put('/api/customer', requireCustomer, (req, res) => {
+  respondDbResult(res, db.updateCustomer(req.customerId, req.body || {}));
+});
+
 // Configurações da loja (número do WhatsApp do checkout)
 app.get('/api/settings', (req, res) => {
   res.json({ success: true, data: db.getSettings() });

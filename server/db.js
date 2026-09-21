@@ -305,7 +305,32 @@ function loginCustomer(email, password, phone) {
   return createCustomerSession(email, password, phone);
 }
 
-function createCustomerSession(email, password, phone) {
+// Atualiza nome + WhatsApp da própria conta (e-mail é imutável).
+function updateCustomer(customerId, input) {
+  if (!isValidCustomerId(customerId)) {
+    return { success: false, status: 400, error: 'Cliente inválido.' };
+  }
+  const src = input && typeof input === 'object' && !Array.isArray(input) ? input : {};
+  const name = String(src.name || '').trim().replace(/\s+/g, ' ').slice(0, 200);
+  if (name.length < 2) {
+    return { success: false, status: 400, error: 'Informe seu nome completo.' };
+  }
+  const digits = normalizePhone(src.phone);
+  if (!digits || !isValidPhone(digits)) {
+    return { success: false, status: 400, error: 'WhatsApp inválido. Use (41) 99999-9999.' };
+  }
+  const db = readDb();
+  const me = db.customers.find(c => c && c.id === customerId);
+  if (!me) return { success: false, status: 404, error: 'Conta não encontrada.' };
+  const owner = db.customers.find(c => c && c.id !== customerId && c.phone === digits);
+  if (owner) {
+    return { success: false, status: 400, error: 'Este WhatsApp já está em outra conta.' };
+  }
+  me.name = name;
+  me.phone = digits;
+  writeDb(db);
+  return { success: true, data: safeCustomer(me) };
+}function createCustomerSession(email, password, phone) {
   const db = readDb();
   const digits = normalizePhone(phone);
 
@@ -665,19 +690,72 @@ function toggleWishlist(customerId, input) {
 }
 
 /* ---------------- ORDERS ---------------- */
-function cloneJson(value) {
-  return JSON.parse(JSON.stringify(value));
+// Validação dura do pedido: sem itens, sem nome/WhatsApp válido ou sem
+// endereço, o pedido NÃO é salvo (nem local, nem WhatsApp avulso).
+function validateOrderInput(source) {
+  const fail = (error) => ({ success: false, status: 400, error });
+  if (!source || typeof source !== 'object' || Array.isArray(source)) {
+    return fail('Dados do pedido inválidos.');
+  }
+  const items = (Array.isArray(source.items) ? source.items : []).filter(
+    i => i && typeof i === 'object' && Number(i.qty) > 0 && String(i.name || '').trim()
+  );
+  if (!items.length) return fail('O pedido precisa de ao menos 1 item.');
+  const total = Number(source.total);
+  if (!(total > 0)) return fail('Total do pedido inválido.');
+  const customer_name = String(source.customer_name || '').trim().slice(0, 200);
+  if (!customer_name) return fail('Nome do cliente é obrigatório.');
+  const customer_phone = normalizePhone(source.customer_phone);
+  if (!customer_phone || !isValidAddressPhone(customer_phone)) {
+    return fail('WhatsApp do cliente inválido (DDD + número).');
+  }
+  let addressText = '';
+  if (typeof source.address === 'string') {
+    addressText = source.address.trim();
+  } else if (source.address && typeof source.address === 'object') {
+    const a = source.address;
+    addressText = [
+      (a.street || '') + (a.number ? ', ' + a.number : ''),
+      a.neighborhood || '', ((a.city || '') + (a.state ? '/' + a.state : '')),
+      a.postal_code ? 'CEP ' + a.postal_code : ''
+    ].filter(s => String(s).trim()).join(' — ');
+  }
+  if (!addressText) return fail('Endereço de entrega é obrigatório.');
+  return {
+    success: true,
+    data: {
+      items: items.map(i => ({
+        id: String(i.id || '').slice(0, 120),
+        name: String(i.name).trim().slice(0, 200),
+        price: Math.max(0, Number(i.price) || 0),
+        qty: Math.min(99, Math.max(1, parseInt(i.qty) || 1))
+      })),
+      subtotal: Number(source.subtotal) > 0 ? Number(source.subtotal) : total,
+      total,
+      customer_name,
+      customer_phone,
+      address: addressText.slice(0, 1000)
+    }
+  };
 }
 
 function saveOrder(orderData) {
   const db = readDb();
   const source = orderData && typeof orderData === 'object' && !Array.isArray(orderData) ? orderData : {};
-  const order = { id: 'ord_' + Date.now(), ...source, created_at: new Date().toISOString() };
-  if (Object.prototype.hasOwnProperty.call(source, 'address_id')) {
-    order.address_id = source.address_id;
+  const v = validateOrderInput(source);
+  if (!v.success) return v;
+  const order = {
+    id: 'ord_' + Date.now(),
+    ...v.data,
+    status: 'pendente',
+    payment_method: String(source.payment_method || 'PIX').slice(0, 20),
+    created_at: new Date().toISOString()
+  };
+  if (typeof source.customer_id === 'string' && source.customer_id) {
+    order.customer_id = source.customer_id;
   }
-  if (Object.prototype.hasOwnProperty.call(source, 'address') && source.address != null) {
-    order.address = cloneJson(source.address);
+  if (typeof source.address_id === 'string' && source.address_id) {
+    order.address_id = source.address_id;
   }
   db.orders.unshift(order);
   writeDb(db);
@@ -919,6 +997,7 @@ module.exports = {
 
   registerCustomer,
   loginCustomer,
+  updateCustomer,
   createCustomerSession,
   verifyCustomerSession,
   getCustomerSession,
