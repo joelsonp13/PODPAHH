@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
-const { send, getBody, cors, bearer, requireAdmin, db } = require('../../lib/supa-http');
+const { send, getBody, cors, bearer, requireAdmin, subpath, db } = require('../../lib/supa-http');
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') { cors(res); return res.status(200).end(); }
-  const parts = req.query.slug ? (Array.isArray(req.query.slug) ? req.query.slug : [req.query.slug]) : [];
+  const parts = subpath(req, ['api', 'admin']);
   const r0 = parts[0], r1 = parts[1];
   const body = (req.method === 'POST' || req.method === 'PUT') ? await getBody(req) : {};
 

@@ -1,7 +1,7 @@
-const { send, getBody, cors, requireAdmin, requireCustomer, db } = require('../../lib/supa-http');
+const { send, getBody, cors, requireAdmin, requireCustomer, subpath, db } = require('../../lib/supa-http');
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') { cors(res); return res.status(200).end(); }
-  const parts = req.query.slug ? (Array.isArray(req.query.slug) ? req.query.slug : [req.query.slug]) : [];
+  const parts = subpath(req, ['api', 'orders']);
   const body = (req.method === 'POST' || req.method === 'PUT') ? await getBody(req) : {};
   // POST /api/orders — cria pedido (público, checkout WhatsApp)
   if (req.method === 'POST' && parts.length === 0) {

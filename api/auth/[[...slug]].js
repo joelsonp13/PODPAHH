@@ -1,9 +1,9 @@
-const { send, getBody, cors, bearer, db } = require('../../lib/supa-http');
+const { send, getBody, cors, bearer, subpath, db } = require('../../lib/supa-http');
 const attempts = new Map();
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') { cors(res); return res.status(200).end(); }
   if (req.method !== 'POST') return send(res, 405, { success: false, error: 'Método não permitido.' });
-  const slug = Array.isArray(req.query.slug) ? req.query.slug[0] : req.query.slug;
+  const slug = subpath(req, ['api', 'auth'])[0];
   const body = await getBody(req);
   if (slug === 'register') {
     const result = await db.registerCustomer(body.name, body.email, body.password, body.phone);

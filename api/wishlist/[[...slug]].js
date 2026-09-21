@@ -1,9 +1,9 @@
-const { send, getBody, cors, requireCustomer, respondDbResult, db } = require('../../lib/supa-http');
+const { send, getBody, cors, requireCustomer, respondDbResult, subpath, db } = require('../../lib/supa-http');
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') { cors(res); return res.status(200).end(); }
   const auth = await requireCustomer(req, res);
   if (!auth) return;
-  const parts = req.query.slug ? (Array.isArray(req.query.slug) ? req.query.slug : [req.query.slug]) : [];
+  const parts = subpath(req, ['api', 'wishlist']);
   const body = (req.method === 'POST' || req.method === 'DELETE') ? await getBody(req) : {};
   if (parts.length === 0 && req.method === 'GET') {
     return send(res, 200, { success: true, data: await db.listWishlist(auth.customerId) });
