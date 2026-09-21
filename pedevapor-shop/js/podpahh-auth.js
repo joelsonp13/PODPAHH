@@ -197,9 +197,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function orderBadge(st) {
     var n = normStatus(st);
-    if (n === 'confirmado') return '<span style="background:rgba(0,200,83,.15);color:#4ade80;padding:4px 10px;border-radius:5px;font-size:.75rem;font-weight:700">CONFIRMADO</span>';
-    if (n === 'cancelado') return '<span style="background:rgba(255,65,108,.15);color:#ff8fb0;padding:4px 10px;border-radius:5px;font-size:.75rem;font-weight:700">CANCELADO</span>';
-    return '<span style="background:rgba(255,179,0,.15);color:#ffb300;padding:4px 10px;border-radius:5px;font-size:.75rem;font-weight:700">PENDENTE</span>';
+    if (n === 'confirmado') return '<span class="acc-ordbadge" style="background:rgba(0,200,83,.15);color:#4ade80;padding:4px 10px;border-radius:5px;font-size:.75rem;font-weight:700">CONFIRMADO</span>';
+    if (n === 'cancelado') return '<span class="acc-ordbadge" style="background:rgba(255,65,108,.15);color:#ff8fb0;padding:4px 10px;border-radius:5px;font-size:.75rem;font-weight:700">CANCELADO</span>';
+    return '<span class="acc-ordbadge" style="background:rgba(255,179,0,.15);color:#ffb300;padding:4px 10px;border-radius:5px;font-size:.75rem;font-weight:700">PENDENTE</span>';
   }
 
   function orderAddressText(o) {
@@ -337,10 +337,11 @@ document.addEventListener('DOMContentLoaded', function () {
       '.acc-card b{color:#fff;font-size:.88rem;display:block}' +
       '.acc-card span{font-size:.74rem;color:var(--dim);display:block}' +
       '.acc-orders{background:var(--bg1);border:1px solid var(--brd);border-radius:12px;padding:26px;min-height:284px;box-sizing:border-box}' +
-      '.acc-ordgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-items:start}' +
-      '.acc-ordcard{background:var(--bg3);border:1px solid var(--brd);border-radius:10px;padding:16px;min-width:0;overflow:hidden;overflow-wrap:anywhere}' +
-      '.acc-ordcard code,.acc-ordcard span,.acc-ordcard div,.acc-ordcard b{overflow-wrap:anywhere;word-break:break-word;min-width:0}' +
-      '.acc-ordid{display:inline-block;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}' +
+      '.acc-ordgrid{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:10px;-webkit-overflow-scrolling:touch}' +
+      '.acc-ordcard{background:var(--bg3);border:1px solid var(--brd);border-radius:10px;padding:16px;flex:0 0 300px;max-width:300px;min-width:0;overflow:hidden;scroll-snap-align:start;box-sizing:border-box}' +
+      '.acc-ordcard code,.acc-ordcard span,.acc-ordcard div{overflow-wrap:break-word;min-width:0}' +
+      '.acc-ordid{display:inline-block;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}' +
+      '.acc-ordbadge{white-space:nowrap;flex-shrink:0}' +
       '.acc-ordaddr{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}' +
       '.acc-empty{text-align:center;padding:40px 16px;color:var(--dim)}' +
       '.acc-empty i{font-size:2.4rem;opacity:.4;display:block;margin-bottom:12px}' +
@@ -352,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function () {
       '.acc-field{margin-bottom:12px}' +
       '.acc-field label{font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px;font-weight:600}' +
       '.acc-field input{width:100%;background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:10px;font-size:.9rem;border-radius:6px;box-sizing:border-box}' +
-      '@media(max-width:900px){.acc-body{flex-direction:column}.acc-side{width:100%;min-height:0}.acc-cards{grid-template-columns:repeat(2,1fr)}.acc-top{flex-direction:column}.acc-ordgrid{grid-template-columns:1fr}}';
+      '@media(max-width:900px){.acc-body{flex-direction:column}.acc-side{width:100%;min-height:0}.acc-cards{grid-template-columns:repeat(2,1fr)}.acc-top{flex-direction:column}.acc-ordgrid{display:block;overflow:visible}.acc-ordgrid .acc-ordcard{max-width:none;margin-bottom:12px}}';
     var st = document.createElement('style');
     st.id = 'acc-style';
     st.textContent = css;
