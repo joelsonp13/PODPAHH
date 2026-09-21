@@ -538,8 +538,10 @@
     ov.id = 'pp-addr-overlay';
     ov.className = 'pp-modal-overlay';
     var listHTML = (addresses || []).map(function (a, i) {
+      // Pré-seleciona o padrão (cai no primeiro se nenhum for padrão)
+      var checked = a.is_default ? true : (i === 0 && !addresses.some(function (x) { return x.is_default; }));
       return '<label class="pp-addr-item">' +
-        '<input type="radio" name="pp-addr-choice" value="' + i + '"' + (i === 0 ? ' checked' : '') + '>' +
+        '<input type="radio" name="pp-addr-choice" value="' + i + '"' + (checked ? ' checked' : '') + '>' +
         '<div class="pp-addr-info">' +
         '<b>' + esc(a.label || 'Endereço ' + (i + 1)) + (a.is_default ? ' <span class="pp-addr-badge">PADRÃO</span>' : '') + '</b>' +
         '<span>' + esc(a.street + ', ' + a.number + (a.complement ? ' - ' + a.complement : '')) + '</span>' +
