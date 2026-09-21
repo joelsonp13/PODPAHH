@@ -374,15 +374,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
   window.vsAccountBuy = function(pid) {
     if (window.vsAddToCart) window.vsAddToCart(String(pid));
-    else window.location.href = 'loja.html';
+    else window.location.href = accStoreHome();
   };
+
+  // Vitrine conforme a árvore: raiz tem loja.html; pedevapor-shop usa a
+  // categoria descartáveis (lá não existe loja.html).
+  function accStoreHome() {
+    try {
+      if (String(window.location.pathname || '').indexOf('/pedevapor-shop/') !== -1) {
+        return '/pedevapor-shop/pages/categoria-produto/descartaveis.html';
+      }
+    } catch (e) {}
+    return 'loja.html';
+  }
 
   function renderOrdersHtml(orders) {
     if (!orders.length) {
       return '<div style="text-align:center;padding:36px 16px;color:var(--dim)">' +
         '<i class="fa fa-receipt" style="font-size:2.2rem;opacity:.4;display:block;margin-bottom:12px"></i>' +
         '<p style="margin:0 0 14px">Você ainda não fez nenhum pedido.</p>' +
-        '<a href="loja.html" class="pp-btn-ghost" style="display:inline-block;border-color:var(--c);color:var(--c)"><i class="fa fa-store"></i> VER PRODUTOS</a></div>';
+        '<a href="' + accStoreHome() + '" class="pp-btn-ghost" style="display:inline-block;border-color:var(--c);color:var(--c)"><i class="fa fa-store"></i> VER PRODUTOS</a></div>';
     }
     return orders.map(function (o) {
       var items = (o.items || []).map(function (i) {
@@ -406,7 +417,7 @@ document.addEventListener('DOMContentLoaded', function () {
       return '<div style="text-align:center;padding:36px 16px;color:var(--dim)">' +
         '<i class="fa fa-heart" style="font-size:2.2rem;opacity:.4;display:block;margin-bottom:12px"></i>' +
         '<p style="margin:0 0 14px">Nenhum favorito ainda. Toque no <i class="fa fa-heart"></i> dos produtos para salvar aqui.</p>' +
-        '<a href="loja.html" class="pp-btn-ghost" style="display:inline-block;border-color:var(--c);color:var(--c)"><i class="fa fa-store"></i> VER PRODUTOS</a></div>';
+        '<a href="' + accStoreHome() + '" class="pp-btn-ghost" style="display:inline-block;border-color:var(--c);color:var(--c)"><i class="fa fa-store"></i> VER PRODUTOS</a></div>';
     }
     return '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">' +
       wishlist.map(function (w) {
@@ -506,7 +517,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }).join('') +
       '<div style="text-align:right;margin-top:10px"><button onclick="vsAccountTab(\'orders\')" class="pp-btn-ghost" style="font-size:.78rem">VER TODOS <i class="fa fa-arrow-right"></i></button></div>'
       : '<div class="acc-empty"><i class="fa fa-receipt"></i><p style="margin:0 0 18px">Você ainda não fez nenhum pedido.</p>' +
-      '<a href="loja.html" class="acc-trap"><span>IR PARA A LOJA</span></a></div>';
+      '<a href="' + accStoreHome() + '" class="acc-trap"><span>IR PARA A LOJA</span></a></div>';
 
     wrap.innerHTML = '<div class="acc-shell">' +
       '<div class="acc-topline"></div>' +

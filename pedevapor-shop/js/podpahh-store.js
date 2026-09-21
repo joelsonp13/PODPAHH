@@ -41,6 +41,10 @@
   function base() {
     return (document.body.getAttribute('data-base') || '.');
   }
+  // Vitrine (lista de produtos): evita ../index.html que não existe.
+  function storeHome() {
+    return base() + '/pages/categoria-produto/descartaveis.html';
+  }
   function safeId(s) {
     return String(s).replace(/[^A-Za-z0-9_-]/g, '');
   }
@@ -700,7 +704,7 @@
       mount.innerHTML = '<div class="pp-cart-empty"><i class="fa fa-shopping-bag"></i>' +
         '<h2>Seu carrinho está vazio</h2>' +
         '<p>Adicione produtos para continuar.</p>' +
-        '<a class="pp-btn-primary" href="../index.html">VER PRODUTOS</a></div>';
+        '<a class="pp-btn-primary" href="' + storeHome() + '">VER PRODUTOS</a></div>';
       return;
     }
     var rows = '', sub = 0;
@@ -722,7 +726,7 @@
       '<div class="pp-cart-items"><table class="pp-cart-table"><tbody>' + rows + '</tbody></table>' +
       '<div class="pp-cart-actions">' +
       '<a href="../pages/loja.html" class="pp-btn-ghost" style="display:none"></a>' +
-      '<a href="../index.html" class="pp-btn-ghost"><i class="fa fa-arrow-left"></i> CONTINUAR COMPRANDO</a>' +
+      '<a href="' + storeHome() + '" class="pp-btn-ghost"><i class="fa fa-arrow-left"></i> CONTINUAR COMPRANDO</a>' +
       '<button class="pp-btn-ghost" onclick="vsClearCart()"><i class="fa fa-trash"></i> ESVAZIAR</button>' +
       '</div></div>' +
       '<aside class="pp-cart-summary">' +
@@ -756,7 +760,7 @@
       mount.innerHTML = '<div class="pp-cart-empty"><i class="fa fa-heart"></i>' +
         '<h2>Sua lista de desejos está vazia</h2>' +
         '<p>Toque no coração dos produtos para salvá-los aqui.</p>' +
-        '<a class="pp-btn-primary" href="../index.html">VER PRODUTOS</a></div>';
+        '<a class="pp-btn-primary" href="' + storeHome() + '">VER PRODUTOS</a></div>';
       return;
     }
     var cards = '';
@@ -785,7 +789,7 @@
       mount.innerHTML = '<div class="pp-cart-empty"><i class="fa fa-heart-o"></i>' +
         '<h2>Nenhum produto encontrado</h2>' +
         '<p>Os produtos salvos não estão mais disponíveis no catálogo.</p>' +
-        '<a class="pp-btn-primary" href="../index.html">VER PRODUTOS</a></div>';
+        '<a class="pp-btn-primary" href="' + storeHome() + '">VER PRODUTOS</a></div>';
       return;
     }
     mount.innerHTML =
