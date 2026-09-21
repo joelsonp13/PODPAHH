@@ -337,7 +337,7 @@ document.addEventListener('DOMContentLoaded', function () {
       '.acc-card b{color:#fff;font-size:.88rem;display:block}' +
       '.acc-card span{font-size:.74rem;color:var(--dim);display:block}' +
       '.acc-orders{background:var(--bg1);border:1px solid var(--brd);border-radius:12px;padding:26px;min-height:284px;box-sizing:border-box}' +
-      '.acc-ordgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}' +
+      '.acc-ordgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}' +
       '.acc-ordcard{background:var(--bg3);border:1px solid var(--brd);border-radius:10px;padding:16px;min-width:0}' +
       '.acc-empty{text-align:center;padding:40px 16px;color:var(--dim)}' +
       '.acc-empty i{font-size:2.4rem;opacity:.4;display:block;margin-bottom:12px}' +
