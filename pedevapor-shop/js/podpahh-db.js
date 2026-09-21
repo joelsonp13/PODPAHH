@@ -11,7 +11,15 @@
 
   var MODE = 'local'; // 'local' ou 'supabase'
 
-  var LOCAL_API = 'http://localhost:3000/api';
+  // Same-origin: funciona no localhost:3000 e no Vercel (https://.../api).
+  var LOCAL_API = (function () {
+    try {
+      if (window.location && window.location.origin && window.location.origin.indexOf('http') === 0) {
+        return window.location.origin + '/api';
+      }
+    } catch (e) {}
+    return 'http://localhost:3000/api';
+  })();
 
   // Chaves PÚBLICAS — seguras no navegador SOMENTE com RLS habilitado.
   // A SECRET KEY nunca entra aqui (fica no servidor, .env).

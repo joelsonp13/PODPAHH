@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "regions": ["gru1"],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/pedevapor-shop/pages/categoria-produto/descartaveis.html",
+      "permanent": false
+    },
+    {
+      "source": "/index.html",
+      "destination": "/pedevapor-shop/pages/categoria-produto/descartaveis.html",
+      "permanent": false
+    }
+  ]
+}
