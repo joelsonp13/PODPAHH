@@ -686,6 +686,11 @@ function saveOrder(orderData) {
 
 function getOrders() { return readDb().orders || []; }
 
+function getOrdersByCustomer(customerId) {
+  if (!isValidCustomerId(customerId)) return [];
+  return (readDb().orders || []).filter(o => o && String(o.customer_id) === String(customerId));
+}
+
 function updateOrderStatus(id, status) {
   // Bilíngue PT+EN para bater com o enum public.order_status do Supabase
   // (schema.sql) e com o painel admin. PT é o usado na UI.
@@ -937,6 +942,7 @@ module.exports = {
 
   saveOrder,
   getOrders,
+  getOrdersByCustomer,
   updateOrderStatus,
   deleteOrder,
   getCustomers,

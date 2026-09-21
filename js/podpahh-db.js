@@ -90,6 +90,26 @@
       }
     },
 
+    // Pedidos do próprio cliente logado (Minha Conta — histórico)
+    getMyOrders: async function(token) {
+      if (MODE === 'supabase' && supabaseClient) {
+        var uid = window.PodpahhDB._sessionUserId();
+        if (!uid) return { success: false, error: 'Sessão expirada.' };
+        var { data, error } = await supabaseClient.from('orders').select('*').eq('customer_id', uid).order('created_at', { ascending: false });
+        if (error) throw error;
+        return { success: true, data: data || [] };
+      } else {
+        try {
+          var res = await fetch(LOCAL_API + '/orders/mine', {
+            headers: { 'Authorization': 'Bearer ' + (token || '') }
+          });
+          return await res.json();
+        } catch (err) {
+          return { success: false, error: 'Servidor offline.' };
+        }
+      }
+    },
+
     // Endereços do cliente
     getAddresses: async function(token) {
       if (MODE === 'supabase' && supabaseClient) {

@@ -152,6 +152,11 @@ app.post('/api/orders', (req, res) => {
   res.json(db.saveOrder(req.body));
 });
 
+// Pedidos do próprio cliente logado (Minha Conta) — só os dele.
+app.get('/api/orders/mine', requireCustomer, (req, res) => {
+  res.json({ success: true, data: db.getOrdersByCustomer(req.customerId) });
+});
+
 app.get('/api/orders', requireAdmin, (req, res) => {
   res.json({ success: true, data: db.getOrders() });
 });
