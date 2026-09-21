@@ -199,7 +199,10 @@ document.addEventListener('DOMContentLoaded', () => {
   /* --- 12. Add to cart animation (handled by podpahh-store.js) --- */
 
   /* --- 13. Scroll-to-top button --- */
+  // Escondido de verdade quando invisível (opacity:0 sozinho mantém o
+  // botão interceptando toques — cobria o item Conta no mobile).
   const scrollBtn = document.createElement('button');
+  scrollBtn.setAttribute('aria-label', 'Voltar ao topo');
   scrollBtn.innerHTML = '<i class="fa fa-arrow-up"></i>';
   scrollBtn.style.cssText = `
     position: fixed; bottom: 24px; right: 24px; z-index: 9998;
@@ -207,10 +210,17 @@ document.addEventListener('DOMContentLoaded', () => {
     background: var(--pod-gradient); color: #fff;
     border: none; border-radius: 50%;
     font-size: 1rem; cursor: pointer;
-    opacity: 0; transform: translateY(20px);
-    transition: opacity .3s, transform .3s, box-shadow .3s;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transform: translateY(20px);
+    transition: opacity .3s, transform .3s, box-shadow .3s, visibility .3s;
     box-shadow: 0 4px 15px rgba(26,26,26,0.3);
   `;
+  // No celular sobe acima da barra inferior (mbn) para não cobrir os botões.
+  try {
+    if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
+      scrollBtn.style.bottom = 'calc(88px + env(safe-area-inset-bottom, 0px))';
+    }
+  } catch (e) {}
   document.body.appendChild(scrollBtn);
 
   scrollBtn.addEventListener('mouseenter', () => {
@@ -225,9 +235,13 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('scroll', () => {
     if (window.scrollY > 400) {
       scrollBtn.style.opacity = '1';
+      scrollBtn.style.visibility = 'visible';
+      scrollBtn.style.pointerEvents = 'auto';
       scrollBtn.style.transform = 'translateY(0)';
     } else {
       scrollBtn.style.opacity = '0';
+      scrollBtn.style.visibility = 'hidden';
+      scrollBtn.style.pointerEvents = 'none';
       scrollBtn.style.transform = 'translateY(20px)';
     }
   });

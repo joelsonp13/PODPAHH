@@ -18,6 +18,11 @@
       "permanent": false
     },
     {
+      "source": "/pedevapor-shop/",
+      "destination": "/pedevapor-shop/pages/categoria-produto/descartaveis.html",
+      "permanent": false
+    },
+    {
       "source": "/pedevapor-shop/index.html",
       "destination": "/pedevapor-shop/pages/categoria-produto/descartaveis.html",
       "permanent": false

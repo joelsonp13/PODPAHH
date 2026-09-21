@@ -161,6 +161,11 @@ a:hover { color: #9aa0b4; }
 .haction i {
   font-size: 1.1rem;
 }
+/* Âncora o badge absoluto do carrinho (sem isso ele flutua no viewport
+   e cria zona morta de toque no canto superior direito). */
+.cart-btn {
+  position: relative !important;
+}
 .haction:hover {
   color: #9aa0b4 !important;
   background: rgba(255, 255, 255, 0.05);
@@ -1551,6 +1556,7 @@ a.subcat-cta {
   box-shadow: none !important;
   border-radius: 999px !important;
   overflow: hidden !important;
+  position: relative !important; /* âncora o botão absolute da lupa */
   transition: border-color 0.2s ease, background 0.2s ease !important;
 }
 .hdr-search:focus-within {
