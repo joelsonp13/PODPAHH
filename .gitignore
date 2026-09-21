@@ -5,3 +5,6 @@ data/
 *.db
 pedevapor-shop-backup/
 .vscode/
+
+.vercel
+.env*
