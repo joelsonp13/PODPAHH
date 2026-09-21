@@ -90,12 +90,15 @@ create table if not exists public.products (
 
 comment on table public.products is 'Catálogo de produtos PODPAHH';
 comment on column public.products.id is 'ID legado no formato prod_*';
-comment on column public.products.models is 'Modelos dentro do produto: [{id,name,price,stock,image}] — price 0 = usa preço do produto';
-comment on column public.products.puffs is 'Quantidade de puxadas do produto (ex: 25000). 0 = não informado';
 
--- MIGRAÇÃO para bases já criadas (rode o schema de novo sem medo: é idempotente)
+-- MIGRAÇÃO para bases já criadas (rode o schema de novo sem medo: é idempotente).
+-- Fica ANTES dos COMMENTs das colunas novas: em base antiga a tabela já
+-- existe sem models/puffs e o COMMENT falharia (42703) abortando o script.
 alter table public.products add column if not exists models jsonb not null default '[]'::jsonb;
 alter table public.products add column if not exists puffs integer not null default 0;
+
+comment on column public.products.models is 'Modelos dentro do produto: [{id,name,price,stock,image}] — price 0 = usa preço do produto';
+comment on column public.products.puffs is 'Quantidade de puxadas do produto (ex: 25000). 0 = não informado';
 
 -- Garante que models seja sempre um array (evita objeto/string quebrando o ADM)
 do $$
@@ -148,6 +151,7 @@ comment on table public.orders is 'Pedidos iniciados no checkout';
 
 -- MIGRAÇÃO: updated_at não existia no schema original, mas o admin/backend
 -- (updateOrderStatus) grava updated_at a cada troca de status.
+-- ANTES de qualquer statement que cite a coluna (evita 42703 em base antiga).
 alter table public.orders add column if not exists updated_at timestamptz not null default now();
 
 -- ----------------------------------------------------------------------------
