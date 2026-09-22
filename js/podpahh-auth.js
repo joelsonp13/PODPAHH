@@ -197,9 +197,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function orderBadge(st) {
     var n = normStatus(st);
-    if (n === 'confirmado') return '<span class="acc-ordbadge" style="background:rgba(0,200,83,.15);color:#4ade80;padding:4px 10px;border-radius:5px;font-size:.75rem;font-weight:700">CONFIRMADO</span>';
-    if (n === 'cancelado') return '<span class="acc-ordbadge" style="background:rgba(255,65,108,.15);color:#ff8fb0;padding:4px 10px;border-radius:5px;font-size:.75rem;font-weight:700">CANCELADO</span>';
-    return '<span class="acc-ordbadge" style="background:rgba(255,179,0,.15);color:#ffb300;padding:4px 10px;border-radius:5px;font-size:.75rem;font-weight:700">PENDENTE</span>';
+    if (n === 'confirmado') return '<span class="acc-ordbadge" style="background:rgba(0,200,83,.15);color:#4ade80;padding:4px 10px;border-radius:0;font-size:.75rem;font-weight:700">CONFIRMADO</span>';
+    if (n === 'cancelado') return '<span class="acc-ordbadge" style="background:rgba(255,65,108,.15);color:#ff8fb0;padding:4px 10px;border-radius:0;font-size:.75rem;font-weight:700">CANCELADO</span>';
+    return '<span class="acc-ordbadge" style="background:rgba(255,179,0,.15);color:#ffb300;padding:4px 10px;border-radius:0;font-size:.75rem;font-weight:700">PENDENTE</span>';
   }
 
   function orderAddressText(o) {
@@ -310,35 +310,35 @@ document.addEventListener('DOMContentLoaded', function () {
       '.acc-eyebrow{color:var(--c);font-size:.75rem;letter-spacing:3px;font-weight:700}' +
       '.acc-title{font-family:\'Barlow Condensed\',sans-serif;font-size:2rem;color:#fff;margin:2px 0 0;letter-spacing:1px;display:flex;align-items:center;gap:10px}' +
       '.acc-title i{color:var(--c)}' +
-      '.acc-usercard{display:flex;align-items:center;gap:12px;background:var(--bg3);border:1px solid var(--brd);border-radius:10px;padding:10px 18px 10px 10px}' +
-      '.acc-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--c),#1a56db);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;color:#fff;flex-shrink:0}' +
+      '.acc-usercard{display:flex;align-items:center;gap:12px;background:transparent;border:1px solid var(--brd);border-radius:0;padding:10px 18px 10px 10px}' +
+      '.acc-avatar{width:44px;height:44px;border-radius:0;background:linear-gradient(135deg,var(--c),#1a56db);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;color:#fff;flex-shrink:0}' +
       '.acc-avatar.big{width:76px;height:76px;font-size:2rem}' +
       '.acc-uname{color:#fff;font-weight:700;font-size:.95rem}' +
       '.acc-umail{color:var(--dim);font-size:.78rem}' +
       '.acc-body{display:flex;gap:24px;margin-top:20px;align-items:flex-start}' +
-      '.acc-side{width:240px;flex-shrink:0;background:var(--bg1);border:1px solid var(--brd);border-radius:12px;padding:12px;min-height:397px;display:flex;flex-direction:column}' +
+      '.acc-side{width:240px;flex-shrink:0;background:transparent;border:1px solid var(--brd);border-radius:0;padding:12px;min-height:397px;display:flex;flex-direction:column}' +
       '.acc-menu{display:flex;flex-direction:column;gap:4px}' +
-      '.acc-mi{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--dim);font-size:.88rem;font-weight:600;cursor:pointer;width:100%;text-align:left}' +
+      '.acc-mi{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:0;border:1px solid transparent;background:transparent;color:var(--dim);font-size:.88rem;font-weight:600;cursor:pointer;width:100%;text-align:left}' +
       '.acc-mi i{width:18px;text-align:center}' +
       '.acc-mi:hover{color:#fff;background:rgba(255,255,255,.03)}' +
       '.acc-mi.on{background:rgba(0,220,255,.08);border-color:var(--c);color:var(--c)}' +
       '.acc-mi.danger{color:#ff5252}' +
       '.acc-sidefoot{margin-top:auto;padding-top:12px;display:flex;gap:8px}' +
-      '.acc-footbox{flex:1;background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:10px;text-align:center}' +
+      '.acc-footbox{flex:1;background:transparent;border:1px solid var(--brd);border-radius:0;padding:10px;text-align:center}' +
       '.acc-footbox b{color:#fff;font-size:1.1rem;display:block}' +
       '.acc-footbox span{font-size:.68rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px}' +
       '.acc-main{flex:1;min-width:0}' +
-      '.acc-welcome{position:relative;background:var(--bg1);border:1px solid var(--brd);border-top:3px solid var(--c);border-radius:12px;padding:22px;min-height:137px;display:flex;justify-content:space-between;align-items:center;gap:16px;overflow:hidden;box-sizing:border-box}' +
+      '.acc-welcome{position:relative;background:transparent;border:1px solid var(--brd);border-top:3px solid var(--c);border-radius:0;padding:22px;min-height:137px;display:flex;justify-content:space-between;align-items:center;gap:16px;overflow:hidden;box-sizing:border-box}' +
       '.acc-welcome:after{content:\'\';position:absolute;top:0;right:0;width:56px;height:3px;background:#ff2fb3}' +
       '.acc-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}' +
-      '.acc-card{background:var(--bg1);border:1px solid var(--brd);border-radius:10px;padding:14px;display:flex;gap:10px;align-items:center;cursor:pointer;text-align:left;color:var(--txt);width:100%}' +
+      '.acc-card{background:transparent;border:1px solid var(--brd);border-radius:0;padding:14px;display:flex;gap:10px;align-items:center;cursor:pointer;text-align:left;color:var(--txt);width:100%}' +
       '.acc-card:hover{border-color:var(--c)}' +
       '.acc-card i{font-size:1.25rem;color:var(--c);flex-shrink:0}' +
       '.acc-card b{color:#fff;font-size:.88rem;display:block}' +
       '.acc-card span{font-size:.74rem;color:var(--dim);display:block}' +
-      '.acc-orders{background:var(--bg1);border:1px solid var(--brd);border-radius:12px;padding:26px;min-height:284px;box-sizing:border-box}' +
+      '.acc-orders{background:transparent;border:1px solid var(--brd);border-radius:0;padding:26px;min-height:284px;box-sizing:border-box}' +
       '.acc-ordgrid{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:10px;-webkit-overflow-scrolling:touch}' +
-      '.acc-ordcard{background:var(--bg3);border:1px solid var(--brd);border-radius:10px;padding:16px;flex:0 0 300px;max-width:300px;min-width:0;overflow:hidden;scroll-snap-align:start;box-sizing:border-box}' +
+      '.acc-ordcard{background:transparent;border:1px solid var(--brd);border-radius:0;padding:16px;flex:0 0 300px;max-width:300px;min-width:0;overflow:hidden;scroll-snap-align:start;box-sizing:border-box}' +
       '.acc-ordcard code,.acc-ordcard span,.acc-ordcard div{overflow-wrap:break-word;min-width:0}' +
       '.acc-ordid{display:inline-block;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}' +
       '.acc-ordbadge{white-space:nowrap;flex-shrink:0}' +
@@ -347,12 +347,12 @@ document.addEventListener('DOMContentLoaded', function () {
       '.acc-empty i{font-size:2.4rem;opacity:.4;display:block;margin-bottom:12px}' +
       '.acc-trap{display:inline-block;min-width:190px;min-height:78px;line-height:78px;padding:0 28px;background:var(--c);color:#001318;font-weight:800;letter-spacing:1.5px;transform:skewX(-10deg);border:none;cursor:pointer;font-size:.92rem;text-decoration:none;box-sizing:border-box}' +
       '.acc-trap>span{display:inline-block;transform:skewX(10deg)}' +
-      '.acc-panel{background:var(--bg1);border:1px solid var(--brd);border-radius:12px;padding:22px;box-sizing:border-box}' +
+      '.acc-panel{background:transparent;border:1px solid var(--brd);border-radius:0;padding:22px;box-sizing:border-box}' +
       '.acc-h3{margin:0 0 14px;font-family:\'Barlow Condensed\',sans-serif;font-size:1.25rem;letter-spacing:1.5px;color:#fff}' +
       '.acc-h3 i{color:var(--c)}' +
       '.acc-field{margin-bottom:12px}' +
       '.acc-field label{font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px;font-weight:600}' +
-      '.acc-field input{width:100%;background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:10px;font-size:.9rem;border-radius:6px;box-sizing:border-box}' +
+      '.acc-field input{width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.9rem;border-radius:0;box-sizing:border-box}' +
       '@media(max-width:900px){.acc-body{flex-direction:column}.acc-side{width:100%;min-height:0}.acc-cards{grid-template-columns:repeat(2,1fr)}.acc-top{flex-direction:column}.acc-ordgrid{display:block;overflow:visible}.acc-ordgrid .acc-ordcard{max-width:none;margin-bottom:12px}}';
     var st = document.createElement('style');
     st.id = 'acc-style';
@@ -459,7 +459,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var price = (modelName && found && found.price) ? found.price : (p.price || 0);
         var pid = String(w.product_id).replace(/'/g, '');
         var mid = String(w.model_id || '').replace(/'/g, '');
-        return '<div style="background:var(--bg3);border:1px solid var(--brd);border-radius:10px;overflow:hidden">' +
+        return '<div style="background:transparent;border:1px solid var(--brd);border-radius:0;overflow:hidden">' +
           (img ? '<img src="' + esc(img) + '" alt="" loading="lazy" style="width:100%;height:130px;object-fit:cover" onerror="this.style.display=\'none\'">' : '') +
           '<div style="padding:12px">' +
           '<div style="color:#fff;font-size:.88rem;font-weight:700;line-height:1.3;margin-bottom:2px">' + esc(p.name || w.product_id) + '</div>' +
@@ -508,9 +508,9 @@ document.addEventListener('DOMContentLoaded', function () {
     } else {
       addrHtml = '<div style="display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:20px">';
       addresses.forEach(function(a) {
-        addrHtml += '<div style="background:var(--bg3);border:1px solid ' + (a.is_default ? 'var(--c)' : 'var(--brd)') + ';padding:14px;border-radius:8px;position:relative">' +
+        addrHtml += '<div style="background:transparent;border:1px solid ' + (a.is_default ? 'var(--c)' : 'var(--brd)') + ';padding:14px;border-radius:0;position:relative">' +
           '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">' +
-          '<b style="color:var(--txt);font-size:.92rem">' + esc(a.label || 'Endereço') + ' ' + (a.is_default ? '<span style="background:var(--c);color:#000;font-size:.65rem;padding:2px 6px;border-radius:4px;font-weight:700">PADRÃO</span>' : '') + '</b>' +
+          '<b style="color:var(--txt);font-size:.92rem">' + esc(a.label || 'Endereço') + ' ' + (a.is_default ? '<span style="background:var(--c);color:#000;font-size:.65rem;padding:2px 6px;border-radius:0;font-weight:700">PADRÃO</span>' : '') + '</b>' +
           '<div style="display:flex;gap:8px">' +
           '<button onclick="vsEditAddressModal(\'' + a.id + '\')" class="pp-btn-ghost" style="padding:4px 8px;font-size:.72rem"><i class="fa fa-edit"></i></button>' +
           '<button onclick="vsDeleteAddressItem(\'' + a.id + '\')" class="pp-btn-ghost" style="padding:4px 8px;font-size:.72rem;border-color:rgba(255,50,50,.3);color:#ff5252"><i class="fa fa-trash"></i></button>' +
@@ -589,29 +589,29 @@ document.addEventListener('DOMContentLoaded', function () {
       '<button onclick="vsToggleAccountAddressForm(true)" class="pp-btn-ghost" style="border-color:var(--c);color:var(--c)"><i class="fa fa-plus"></i> ADICIONAR ENDEREÇO</button>' +
       '</div>' +
       addrHtml +
-      '<div id="accountAddressFormWrap" style="display:none;background:var(--bg3);border:1px solid var(--brd);padding:20px;border-radius:10px;margin-top:16px">' +
+      '<div id="accountAddressFormWrap" style="display:none;background:transparent;border:1px solid var(--brd);padding:20px;border-radius:0;margin-top:16px">' +
       '<h4 id="accountFormTitle" style="margin:0 0 14px;font-family:\'Barlow Condensed\',sans-serif;font-size:1.1rem;letter-spacing:1px;color:#fff">Novo Endereço</h4>' +
       '<form id="accountAddressForm" onsubmit="vsSaveAccountAddress(event)">' +
       '<input type="hidden" id="edit_address_id" value="">' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
-      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">NOME DO DESTINATÁRIO *</label><input type="text" id="acc_recipient_name" required style="width:100%;background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:9px;font-size:.88rem"></div>' +
-      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">WHATSAPP DE CONTATO *</label><input type="tel" id="acc_phone" required style="width:100%;background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:9px;font-size:.88rem"></div>' +
+      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">NOME DO DESTINATÁRIO *</label><input type="text" id="acc_recipient_name" required style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.88rem;border-radius:0"></div>' +
+      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">WHATSAPP DE CONTATO *</label><input type="tel" id="acc_phone" required style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.88rem;border-radius:0"></div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
-      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">CEP (8 DÍGITOS) *</label><input type="text" id="acc_postal_code" maxlength="8" required style="width:100%;background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:9px;font-size:.88rem"></div>' +
-      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">RÓTULO (EX: CASA, TRABALHO)</label><input type="text" id="acc_label" value="Casa" style="width:100%;background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:9px;font-size:.88rem"></div>' +
+      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">CEP (8 DÍGITOS) *</label><input type="text" id="acc_postal_code" maxlength="8" required style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.88rem;border-radius:0"></div>' +
+      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">RÓTULO (EX: CASA, TRABALHO)</label><input type="text" id="acc_label" value="Casa" style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.88rem;border-radius:0"></div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:3fr 1fr;gap:12px;margin-bottom:12px">' +
-      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">RUA / AVENIDA *</label><input type="text" id="acc_street" required style="width:100%;background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:9px;font-size:.88rem"></div>' +
-      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">NÚMERO *</label><input type="text" id="acc_number" required style="width:100%;background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:9px;font-size:.88rem"></div>' +
+      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">RUA / AVENIDA *</label><input type="text" id="acc_street" required style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.88rem;border-radius:0"></div>' +
+      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">NÚMERO *</label><input type="text" id="acc_number" required style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.88rem;border-radius:0"></div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
-      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">COMPLEMENTO</label><input type="text" id="acc_complement" style="width:100%;background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:9px;font-size:.88rem"></div>' +
-      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">BAIRRO *</label><input type="text" id="acc_neighborhood" required style="width:100%;background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:9px;font-size:.88rem"></div>' +
+      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">COMPLEMENTO</label><input type="text" id="acc_complement" style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.88rem;border-radius:0"></div>' +
+      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">BAIRRO *</label><input type="text" id="acc_neighborhood" required style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.88rem;border-radius:0"></div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:16px">' +
-      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">CIDADE *</label><input type="text" id="acc_city" required style="width:100%;background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:9px;font-size:.88rem"></div>' +
-      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">UF (ESTADO) *</label><input type="text" id="acc_state" maxlength="2" required style="width:100%;background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:9px;font-size:.88rem"></div>' +
+      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">CIDADE *</label><input type="text" id="acc_city" required style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.88rem;border-radius:0"></div>' +
+      '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">UF (ESTADO) *</label><input type="text" id="acc_state" maxlength="2" required style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.88rem;border-radius:0"></div>' +
       '</div>' +
       '<div style="display:flex;gap:10px">' +
       '<button type="submit" class="pp-btn-ghost" style="flex:1;border-color:var(--c);color:var(--c)"><i class="fa fa-save"></i> SALVAR ENDEREÇO</button>' +
