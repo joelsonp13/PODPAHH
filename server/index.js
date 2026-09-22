@@ -294,8 +294,8 @@ app.get('/api/admin/products', requireAdmin, (req, res) => {
   res.json({ success: true, data: db.getProducts() });
 });
 
-app.post('/api/admin/products', requireAdmin, (req, res) => {
-  res.json(db.saveProduct(req.body));
+app.post('/api/admin/products', requireAdmin, async (req, res) => {
+  res.json(await db.saveProduct(req.body));
 });
 
 app.delete('/api/admin/products/:id', requireAdmin, (req, res) => {

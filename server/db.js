@@ -985,6 +985,38 @@ function sanitizeImageUrl(v) {
   return v;
 }
 
+/* Storage Supabase (bucket "imagens"): dataURL -> URL pública.
+   Sem env configurado, mantém dataURL (modo local puro). */
+let _supaStore = null;
+function supaStore() {
+  if (_supaStore) return _supaStore;
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+  if (!url || !key) return null;
+  _supaStore = require('@supabase/supabase-js').createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false }
+  });
+  return _supaStore;
+}
+
+async function storeImage(v, dest) {
+  if (typeof v !== 'string' || !v) return '';
+  if (v.indexOf('data:') !== 0) return v;
+  try {
+    const sb = supaStore();
+    if (!sb) return v;
+    const m = v.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,([\s\S]+)$/);
+    if (!m) return v;
+    const buf = Buffer.from(m[2], 'base64');
+    if (!buf.length || buf.length > 2500000) return v;
+    const ext = m[1] === 'image/png' ? 'png' : (m[1] === 'image/webp' ? 'webp' : 'jpg');
+    const { error } = await sb.storage.from('imagens').upload(dest + '.' + ext, buf, { contentType: m[1], upsert: true });
+    if (error) return v;
+    const { data } = sb.storage.from('imagens').getPublicUrl(dest + '.' + ext);
+    return (data && data.publicUrl) || v;
+  } catch (e) { return v; }
+}
+
 function normalizeModels(input, fallbackPrice) {
   if (!Array.isArray(input)) return [];
   const out = [];
@@ -1011,7 +1043,7 @@ function normalizeModels(input, fallbackPrice) {
   return out;
 }
 
-function saveProduct(productData) {
+async function saveProduct(productData) {
   const db = readDb();
   if (!db.products) db.products = [];
 
@@ -1025,6 +1057,15 @@ function saveProduct(productData) {
     if (typeof v !== 'string') return '';
     return v.trim().slice(0, 500);
   }
+  async function fillModels(models, pid) {
+    const out = normalizeModels(models, 0);
+    for (const m of out) {
+      if (m.image && m.image.indexOf('data:') === 0) {
+        m.image = await storeImage(m.image, 'products/' + pid + '/' + m.id);
+      }
+    }
+    return out;
+  }
 
   if (productData.id) {
     const index = db.products.findIndex(p => p.id === productData.id);
@@ -1034,19 +1075,22 @@ function saveProduct(productData) {
       let oldPrice = cleanPrice(productData.old_price);
       // old_price só faz sentido como "preço original" acima do atual
       if (!(oldPrice > basePrice)) oldPrice = 0;
+      const img = (productData.image && productData.image !== prev.image)
+        ? await storeImage(sanitizeImageUrl(productData.image), 'products/' + productData.id + '/cover')
+        : (prev.image || '');
       db.products[index] = {
         ...db.products[index],
         name: String(productData.name || prev.name || 'Produto').slice(0, 200),
         price: basePrice,
         old_price: oldPrice,
         category: productData.category || prev.category || 'descartaveis',
-        image: sanitizeImageUrl(productData.image),
+        image: img,
         url: Object.prototype.hasOwnProperty.call(productData, 'url') ? cleanUrl(productData.url) : (prev.url || ''),
         source_id: Object.prototype.hasOwnProperty.call(productData, 'source_id') ? cleanUrl(productData.source_id) : (prev.source_id || ''),
         stock: Math.max(0, parseInt(productData.stock) || 0),
         puffs: Math.max(0, parseInt(productData.puffs) || 0),
         description: typeof productData.description === 'string' ? productData.description.slice(0, 2000) : (prev.description || ''),
-        models: normalizeModels(productData.models, basePrice),
+        models: await fillModels(productData.models, productData.id),
         updated_at: new Date().toISOString()
       };
       writeDb(db);
@@ -1057,19 +1101,20 @@ function saveProduct(productData) {
   const basePrice = cleanPrice(productData.price);
   let oldPrice = cleanPrice(productData.old_price);
   if (!(oldPrice > basePrice)) oldPrice = 0;
+  const newId = 'prod_' + Date.now();
   const newProduct = {
-    id: 'prod_' + Date.now(),
+    id: newId,
     source_id: cleanUrl(productData.source_id),
     name: String(productData.name || 'Novo Produto').slice(0, 200),
     price: basePrice,
     old_price: oldPrice,
     category: productData.category || 'descartaveis',
-    image: sanitizeImageUrl(productData.image),
+    image: await storeImage(sanitizeImageUrl(productData.image), 'products/' + newId + '/cover'),
     url: cleanUrl(productData.url),
     stock: Math.max(0, parseInt(productData.stock) || 10),
     puffs: Math.max(0, parseInt(productData.puffs) || 0),
     description: typeof productData.description === 'string' ? productData.description.slice(0, 2000) : '',
-    models: normalizeModels(productData.models, basePrice),
+    models: await fillModels(productData.models, newId),
     created_at: new Date().toISOString()
   };
   db.products.push(newProduct);
