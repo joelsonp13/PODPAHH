@@ -1,0 +1,24 @@
+# Mantém Supabase (banco) + Vercel (API) acordados.
+# O plano gratuito do Supabase pausa o banco após dias sem uso;
+# um ping a cada 15 min conta como atividade e evita a pausa.
+# (A anon key abaixo já é pública no próprio js/podpahh-db.js.)
+name: keepalive
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ping supabase
+        run: |
+          curl -s -m 25 "https://qmspfcfdcuvvaxdqggzg.supabase.co/rest/v1/settings?select=whatsapp" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtc3BmY2ZkY3V2dmF4ZHFnZ3pnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MDIzMzUsImV4cCI6MjEwMzI3ODMzNX0.IYsEPUTEGyV43xVPCgb7QnglSMISBaxRpY5uBoBYVBc" \
+            -o /dev/null -w "supabase:%{http_code}\n"
+      - name: ping vercel api
+        run: |
+          curl -s -m 25 "https://podpahh.vercel.app/api/settings" \
+            -o /dev/null -w "vercel:%{http_code}\n"
