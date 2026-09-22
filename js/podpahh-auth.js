@@ -180,30 +180,67 @@ document.addEventListener('DOMContentLoaded', function () {
     return supaRecovery;
   }
 
-  // Detecta retorno do link de recovery (hash #access_token ou ?code=).
-  function hasRecoveryParams() {
+  // Parâmetros de recovery em qualquer formato (hash #access_token,
+  // ?code= PKCE ou ?token_hash=&type=recovery).
+  function recoveryParams() {
     try {
-      if ((window.location.hash || '').indexOf('access_token') !== -1) return true;
+      var hash = String(window.location.hash || '');
       var q = new URLSearchParams(window.location.search);
-      if (q.get('code') || q.get('type') === 'recovery') return true;
-    } catch (e) {}
-    return false;
+      return {
+        implicit: hash.indexOf('access_token') !== -1,
+        code: q.get('code') || '',
+        tokenHash: q.get('token_hash') || '',
+        type: q.get('type') || '',
+        any: hash.indexOf('access_token') !== -1 || !!q.get('code') || !!q.get('token_hash') || q.get('type') === 'recovery'
+      };
+    } catch (e) { return { any: false }; }
+  }
+
+  function recoveryNotice(text) {
+    if (document.getElementById('pp-forgot-overlay')) return;
+    var div = document.createElement('div');
+    div.innerHTML = forgotShell(
+      '<p style="color:var(--txt);font-size:.9rem">' + esc(text) + '</p>' +
+      '<button onclick="vsForgotOpen()" class="pp-btn-ghost" style="width:100%;margin-top:12px;border-color:var(--c);color:var(--c)">GERAR NOVO LINK</button>'
+    );
+    document.body.appendChild(div.firstChild);
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    if (!recoveryParams().any) return;
     var client = supaClient();
-    if (!client) return;
+    if (!client) {
+      setTimeout(function () {
+        recoveryNotice('Não foi possível validar o link (biblioteca offline). Gere um novo link.');
+      }, 800);
+      return;
+    }
+    var opened = false;
+    function openOnce() {
+      if (opened) return; opened = true;
+      window.vsForgotToCodeSupa();
+    }
     client.auth.onAuthStateChange(function (event) {
-      if (event === 'PASSWORD_RECOVERY') {
-        setTimeout(function () { window.vsForgotToCodeSupa(); }, 400);
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        setTimeout(openOnce, 300);
       }
     });
-    // Fallback: parâmetros na URL mas evento ainda não disparou
-    if (hasRecoveryParams()) {
-      setTimeout(function () {
-        if (!document.getElementById('pp-forgot-overlay')) window.vsForgotToCodeSupa();
-      }, 1500);
-    }
+    // Cobre ?token_hash&type=recovery e evento perdido: tenta validar e
+    // confere se já existe sessão (qualquer sessão válida serve p/ trocar).
+    setTimeout(async function () {
+      try {
+        var p = recoveryParams();
+        if (p.tokenHash && p.type) {
+          var v = await client.auth.verifyOtp({ token_hash: p.tokenHash, type: 'recovery' });
+          if (!v.error) { openOnce(); return; }
+        }
+        var s = await client.auth.getSession();
+        if (s && s.data && s.data.session) { openOnce(); return; }
+        if (p.any) recoveryNotice('Este link expirou ou já foi usado. Gere um novo link abaixo.');
+      } catch (e) {
+        if (recoveryParams().any) recoveryNotice('Não foi possível validar o link. Gere um novo.');
+      }
+    }, 1800);
   });
 
   function forgotShell(inner) {
@@ -234,10 +271,17 @@ document.addEventListener('DOMContentLoaded', function () {
     var ov = document.getElementById('pp-forgot-overlay');
     if (ov) ov.remove();
     try {
+      var clean = false;
       var u = new URL(window.location.href);
-      if (u.searchParams.has('reset_token')) {
-        u.searchParams.delete('reset_token');
-        window.history.replaceState({}, '', u.toString());
+      ['reset_token', 'code', 'token_hash', 'type'].forEach(function (k) {
+        if (u.searchParams.has(k)) { u.searchParams.delete(k); clean = true; }
+      });
+      if (window.location.hash && window.location.hash.indexOf('access_token') !== -1) {
+        clean = true;
+      }
+      if (clean) {
+        u.hash = '';
+        window.history.replaceState({}, '', u.toString().split('#')[0]);
       }
     } catch (e) {}
   };
