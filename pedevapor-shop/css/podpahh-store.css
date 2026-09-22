@@ -265,7 +265,8 @@ body.cart-lock, body.gate-blocked { overflow: hidden; }
 .ppc-name a { color: var(--text-main); text-decoration: none; font-weight: 600; font-size: .92rem; }
 .ppc-name a:hover { color: var(--text-muted); }
 .ppc-unit { color: var(--text-muted); font-size: .78rem; margin-top: 4px; }
-.ppc-qty { display: flex; align-items: center; gap: 10px; justify-content: center; }
+.ppc-qty { text-align: center; }
+.ppc-qty-ctrl { display: inline-flex; align-items: center; gap: 10px; justify-content: center; }
 .ppc-qty button {
   width: 26px; height: 26px; border-radius: 6px; cursor: pointer;
   background: var(--bg-input); color: var(--text-main);
