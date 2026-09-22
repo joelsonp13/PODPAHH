@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
     return send(res, result.status || 200, result);
   }
   if (slug === 'reset') {
-    const result = await db.resetPassword(body.email, body.code, body.new_password);
+    const result = await db.resetPasswordByToken(body.token, body.new_password);
     return send(res, result.status || 200, result);
   }
   return send(res, 404, { success: false, error: 'Rota não encontrada.' });

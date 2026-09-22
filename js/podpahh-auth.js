@@ -158,14 +158,24 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // ---- ESQUECI A SENHA (código via WhatsApp da loja) ----
-  // O link "Esqueceu a senha?" do HTML abre este fluxo em 2 passos.
+  // ---- ESQUECI A SENHA (link por e-mail, vale 1h) ----
+  // O link "Esqueceu a senha?" abre o passo 1. O e-mail leva para
+  // .../minha-conta.html?reset_token=... que abre direto o passo 2.
   document.querySelectorAll('.ma-forgot-link').forEach(function (a) {
     a.addEventListener('click', function (e) {
       e.preventDefault();
       window.vsForgotOpen();
     });
   });
+
+  try {
+    var _rt = new URLSearchParams(window.location.search).get('reset_token');
+    if (_rt) {
+      document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(function () { window.vsForgotToCode(_rt); }, 400);
+      });
+    }
+  } catch (e) {}
 
   function forgotShell(inner) {
     return '<div id="pp-forgot-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:3000;display:flex;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)vsForgotClose()">' +
@@ -177,11 +187,10 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function forgotStep1Html() {
-    return '<p style="color:var(--dim);font-size:.85rem;margin:0 0 14px">Informe o e-mail da conta. Geramos um protocolo e você pega o código no WhatsApp da loja.</p>' +
+    return '<p style="color:var(--dim);font-size:.85rem;margin:0 0 14px">Informe o e-mail da conta. Enviamos um link válido por <b>1 hora</b> para criar uma nova senha.</p>' +
       '<div class="acc-field"><label>E-MAIL DA CONTA *</label><input type="email" id="fg_email" placeholder="seu@email.com" style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.9rem;border-radius:0;box-sizing:border-box"></div>' +
       '<div id="fg_msg" style="font-size:.82rem;margin-bottom:10px"></div>' +
-      '<button onclick="vsForgotSend()" class="pp-btn-ghost" style="width:100%;border-color:var(--c);color:var(--c)"><i class="fa fa-paper-plane"></i> GERAR PROTOCOLO</button>' +
-      '<button onclick="vsForgotToCode()" class="pp-btn-ghost" style="width:100%;margin-top:8px">JÁ TENHO O CÓDIGO</button>';
+      '<button onclick="vsForgotSend()" class="pp-btn-ghost" style="width:100%;border-color:var(--c);color:var(--c)"><i class="fa fa-paper-plane"></i> ENVIAR LINK</button>';
   }
 
   window.vsForgotOpen = function() {
@@ -195,6 +204,13 @@ document.addEventListener('DOMContentLoaded', function () {
   window.vsForgotClose = function() {
     var ov = document.getElementById('pp-forgot-overlay');
     if (ov) ov.remove();
+    try {
+      var u = new URL(window.location.href);
+      if (u.searchParams.has('reset_token')) {
+        u.searchParams.delete('reset_token');
+        window.history.replaceState({}, '', u.toString());
+      }
+    } catch (e) {}
   };
 
   function fgMsg(text, ok) {
@@ -209,39 +225,25 @@ document.addEventListener('DOMContentLoaded', function () {
     var email = input ? input.value.trim() : '';
     if (!email || email.indexOf('@') === -1) { fgMsg('Informe um e-mail válido.'); return; }
     if (!window.PodpahhDB || !window.PodpahhDB.forgotPassword) { fgMsg('Servidor offline.'); return; }
-    fgMsg('Gerando protocolo...', true);
+    fgMsg('Enviando...', true);
     try {
       var res = await window.PodpahhDB.forgotPassword(email);
-      if (!res || !res.success) { fgMsg(res && res.error ? res.error : 'Erro ao gerar.'); return; }
-      if (!res.data) {
-        document.getElementById('pp-forgot-body').innerHTML =
-          '<p style="color:var(--txt);font-size:.88rem">Se este e-mail tiver conta, geramos um protocolo. Chame a loja no WhatsApp informando seu e-mail.</p>' +
-          '<button onclick="vsForgotToCode(\'' + esc(email).replace(/'/g, '') + '\')" class="pp-btn-ghost" style="width:100%;border-color:var(--c);color:var(--c)">JÁ TENHO O CÓDIGO</button>';
-        return;
-      }
-      var wa = '5547999453628';
-      try {
-        if (window.PodpahhDB.getSettings) {
-          var s = await window.PodpahhDB.getSettings();
-          if (s && s.whatsapp) wa = String(s.whatsapp).replace(/\D/g, '');
-        }
-      } catch (e) {}
-      var text = 'Olá! Preciso redefinir minha senha. Meu protocolo: ' + res.data.protocol;
+      if (!res || !res.success) { fgMsg(res && res.error ? res.error : 'Erro ao enviar.'); return; }
       document.getElementById('pp-forgot-body').innerHTML =
-        '<p style="color:var(--txt);font-size:.88rem;margin:0 0 6px">Protocolo gerado (vale 15 min):</p>' +
-        '<div style="background:var(--bg3);border:1px dashed var(--c);padding:12px;text-align:center;font-size:1.1rem;font-weight:800;letter-spacing:2px;color:var(--c);margin-bottom:12px">' + esc(res.data.protocol) + '</div>' +
-        '<p style="color:var(--dim);font-size:.82rem;margin:0 0 12px">1. Chame a loja no WhatsApp informando o protocolo.<br>2. O lojista confirma sua identidade e te passa o código de 6 dígitos.<br>3. Volte aqui em <b>JÁ TENHO O CÓDIGO</b>.</p>' +
-        '<a href="https://wa.me/' + esc(wa) + '?text=' + encodeURIComponent(text) + '" target="_blank" class="pp-btn-ghost" style="display:block;text-align:center;border-color:#25d366;color:#25d366;text-decoration:none;margin-bottom:8px"><i class="fa-brands fa-whatsapp"></i> CHAMAR NO WHATSAPP</a>' +
-        '<button onclick="vsForgotToCode(\'' + esc(email).replace(/'/g, '') + '\')" class="pp-btn-ghost" style="width:100%;border-color:var(--c);color:var(--c)">JÁ TENHO O CÓDIGO</button>';
+        '<div style="text-align:center;padding:12px 0">' +
+        '<i class="fa fa-envelope-circle-check" style="font-size:2.4rem;color:#4ade80;display:block;margin-bottom:12px"></i>' +
+        '<p style="color:var(--txt);font-size:.9rem;margin:0 0 6px"><b>Verifique seu e-mail.</b></p>' +
+        '<p style="color:var(--dim);font-size:.82rem;margin:0">Se existir conta para <b>' + esc(email) + '</b>, o link de redefinição (válido por 1 hora) já foi enviado.</p></div>';
     } catch (e) { fgMsg('Erro de conexão.'); }
   };
 
-  window.vsForgotToCode = function(email) {
+  window.vsForgotToCode = function(token) {
+    if (!document.getElementById('pp-forgot-overlay')) window.vsForgotOpen();
     var body = document.getElementById('pp-forgot-body');
     if (!body) return;
     body.innerHTML =
-      '<div class="acc-field"><label>E-MAIL DA CONTA *</label><input type="email" id="fg_email2" value="' + esc(email || '').replace(/"/g, '&quot;') + '" style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.9rem;border-radius:0;box-sizing:border-box"></div>' +
-      '<div class="acc-field"><label>CÓDIGO DE 6 DÍGITOS *</label><input type="text" id="fg_code" inputmode="numeric" maxlength="6" placeholder="000000" style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:1rem;letter-spacing:4px;text-align:center;border-radius:0;box-sizing:border-box"></div>' +
+      '<p style="color:var(--dim);font-size:.85rem;margin:0 0 14px">Crie sua nova senha abaixo.</p>' +
+      '<input type="hidden" id="fg_token" value="' + esc(String(token || '')).replace(/"/g, '&quot;') + '">' +
       '<div class="acc-field"><label>NOVA SENHA (MÍN. 8) *</label><input type="password" id="fg_pass" autocomplete="new-password" style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.9rem;border-radius:0;box-sizing:border-box"></div>' +
       '<div class="acc-field"><label>CONFIRMAR NOVA SENHA *</label><input type="password" id="fg_pass2" autocomplete="new-password" style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.9rem;border-radius:0;box-sizing:border-box"></div>' +
       '<div id="fg_msg" style="font-size:.82rem;margin-bottom:10px"></div>' +
@@ -250,13 +252,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
   window.vsResetSend = async function() {
     var g = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
-    var email = g('fg_email2'), code = g('fg_code'), p1 = g('fg_pass'), p2 = g('fg_pass2');
-    if (!email || email.indexOf('@') === -1) { fgMsg('Informe o e-mail da conta.'); return; }
-    if (code.length !== 6) { fgMsg('O código tem 6 dígitos.'); return; }
+    var token = g('fg_token'), p1 = g('fg_pass'), p2 = g('fg_pass2');
+    if (!token) { fgMsg('Link inválido. Gere um novo.'); return; }
     if (p1.length < 8) { fgMsg('A nova senha precisa de no mínimo 8 caracteres.'); return; }
     if (p1 !== p2) { fgMsg('A confirmação não confere.'); return; }
     try {
-      var res = await window.PodpahhDB.resetPassword(email, code, p1);
+      var res = await window.PodpahhDB.resetPassword(token, p1);
       if (!res || !res.success) { fgMsg(res && res.error ? res.error : 'Erro ao trocar.'); return; }
       try {
         if (res.token && res.data) saveSession(res.token, res.data);

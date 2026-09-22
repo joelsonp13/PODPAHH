@@ -131,16 +131,16 @@ app.post('/api/auth/logout', requireCustomer, (req, res) => {
   res.json({ success: true });
 });
 
-// Recuperação de senha em 2 passos (código via WhatsApp da loja)
-app.post('/api/auth/forgot', loginRateLimit, (req, res) => {
+// Recuperação de senha em 2 passos (link por e-mail)
+app.post('/api/auth/forgot', loginRateLimit, async (req, res) => {
   const { email } = req.body || {};
-  const result = db.requestPasswordReset(email);
+  const result = await db.requestPasswordReset(email);
   res.status(result.status || 200).json(result);
 });
 
-app.post('/api/auth/reset', loginRateLimit, (req, res) => {
-  const { email, code, new_password } = req.body || {};
-  const result = db.resetPassword(email, code, new_password);
+app.post('/api/auth/reset', loginRateLimit, async (req, res) => {
+  const { token, new_password } = req.body || {};
+  const result = await db.resetPasswordByToken(token, new_password);
   res.status(result.status || 200).json(result);
 });
 

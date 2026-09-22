@@ -330,9 +330,9 @@
       <!-- PANEL: RESETS -->
       <div class="adm-panel" id="panel-resets">
         <div class="adm-card">
-          <div class="adm-card-title"><i class="fa fa-key"></i> Redefinições de Senha Pendentes</div>
-          <p style="opacity:.65;font-size:.82rem;margin:0 0 14px">O cliente chama no WhatsApp informando o protocolo. Confira a identidade no chat e <b>leia o código</b> para ele digitar junto da nova senha. Códigos expiram em 15 minutos.</p>
-          <div style="overflow-x:auto"><table class="adm-table"><thead><tr><th>Protocolo</th><th>Conta</th><th>Código</th><th>Expira</th><th>Ações</th></tr></thead><tbody id="resetList"></tbody></table></div>
+          <div class="adm-card-title"><i class="fa fa-key"></i> Links de Redefinição Pendentes</div>
+          <p style="opacity:.65;font-size:.82rem;margin:0 0 14px">Links enviados por e-mail (valem 1 hora, uso único). Revogue se o cliente pedir um novo ou houver suspeita.</p>
+          <div style="overflow-x:auto"><table class="adm-table"><thead><tr><th>ID</th><th>Conta</th><th>Expira</th><th>Ações</th></tr></thead><tbody id="resetList"></tbody></table></div>
         </div>
       </div>
 
@@ -939,7 +939,7 @@
     var arr = list || [];
     var badge = document.getElementById('navResetCount');
     if (badge) badge.textContent = arr.length;
-    if (!arr.length) { el.innerHTML = '<tr><td colspan="5" class="empty-state">Nenhuma solicitação pendente.</td></tr>'; return; }
+    if (!arr.length) { el.innerHTML = '<tr><td colspan="4" class="empty-state">Nenhuma solicitação pendente.</td></tr>'; return; }
     el.innerHTML = arr.map(function (r) {
       var exp = r.expires_at ? new Date(r.expires_at).toLocaleString('pt-BR') : '—';
       var waLink = r.customer_phone
@@ -947,7 +947,6 @@
         : '—';
       return '<tr><td><code>' + esc(r.id) + '</code></td>' +
         '<td><b>' + esc(r.customer_name || r.email) + '</b><br><small style="opacity:.65">' + esc(r.email) + ' | ' + waLink + '</small></td>' +
-        '<td><span style="font-size:1.3rem;font-weight:800;letter-spacing:3px;color:var(--adm-blue)">' + esc(r.code) + '</span></td>' +
         '<td style="font-size:.8rem;opacity:.7">' + exp + '</td>' +
         '<td><button type="button" class="pa-btn del" title="Revogar" onclick="deleteReset(\'' + escId(r.id) + '\')"><i class="fa fa-trash"></i></button></td></tr>';
     }).join('');

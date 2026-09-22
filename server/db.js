@@ -606,19 +606,27 @@ function deleteAddress(customerId, addressId) {
   return { success: true };
 }
 
-/* ---------------- PASSWORD RESET (via WhatsApp da loja) ----------------
-   1. Cliente informa o e-mail -> gera protocolo + código de 6 dígitos (15min).
-   2. Cliente chama a loja no WhatsApp informando o protocolo.
-   3. Lojista confere a identidade no chat e lê o código (painel admin).
-   4. Cliente digita código + nova senha -> troca + derruba sessões antigas. */
-const RESET_TTL = 15 * 60 * 1000;
+/* ---------------- PASSWORD RESET (link por e-mail) ----------------
+   1. Cliente informa o e-mail -> gera token secreto (1h, uso único).
+   2. E-mail com link .../minha-conta.html?reset_token=... é enviado.
+   3. Cliente abre o link, digita a nova senha -> troca + nova sessão.
+   Sem e-mail cadastrado: resposta genérica (anti-enumeração). */
+const RESET_TTL = 60 * 60 * 1000;
+let mailer = null;
+function getMailer() {
+  if (!mailer) {
+    try { mailer = require('../lib/mailer'); }
+    catch (e) { mailer = { sendPasswordReset: async () => ({ success: true, emailed: false }) }; }
+  }
+  return mailer;
+}
 
 function pruneResets(db) {
   const now = Date.now();
   db.resets = (db.resets || []).filter(r => r && !r.used && Number(r.expires_at) > now);
 }
 
-function requestPasswordReset(email) {
+async function requestPasswordReset(email) {
   const db = readDb();
   pruneResets(db);
   const mail = String(email || '').trim().toLowerCase();
@@ -626,34 +634,35 @@ function requestPasswordReset(email) {
     return { success: false, status: 400, error: 'Informe um e-mail válido.' };
   }
   const customer = db.customers.find(c => String(c.email || '').toLowerCase() === mail);
-  // Anti-enumeração: resposta genérica; protocolo só existe se a conta existir.
   if (!customer) {
     writeDb(db);
-    return { success: true, data: null };
+    return { success: true, data: { emailed: false } };
   }
-  const recent = db.resets.find(r => r.customer_id === customer.id);
-  if (recent) {
-    return { success: true, data: { protocol: recent.id, expires_in: Math.max(1, Math.round((recent.expires_at - Date.now()) / 1000)) } };
-  }
-  const now = Date.now();
-  const code = String(crypto.randomInt(100000, 1000000));
+  db.resets = db.resets.filter(r => r.customer_id !== customer.id);
+  const token = crypto.randomBytes(32).toString('hex');
   const item = {
-    id: 'RST-' + now.toString(36).toUpperCase() + crypto.randomBytes(2).toString('hex').toUpperCase(),
+    id: 'rst_' + Date.now().toString(36) + crypto.randomBytes(4).toString('hex'),
     customer_id: customer.id,
     email: customer.email,
-    code,
-    expires_at: now + RESET_TTL,
+    token,
+    expires_at: Date.now() + RESET_TTL,
     used: false,
     created_at: new Date().toISOString()
   };
-  db.resets = db.resets.filter(r => r.customer_id !== customer.id);
   db.resets.push(item);
   writeDb(db);
-  return { success: true, data: { protocol: item.id, expires_in: RESET_TTL / 1000 } };
+  const sent = await getMailer().sendPasswordReset(customer.email, customer.name, token);
+  if (!sent.success) {
+    // Falha no envio: invalida o token para não deixar link morto
+    const db2 = readDb();
+    db2.resets = (db2.resets || []).filter(r => r.id !== item.id);
+    writeDb(db2);
+    return { success: false, status: 502, error: sent.error || 'Não foi possível enviar o e-mail. Tente mais tarde.' };
+  }
+  return { success: true, data: { emailed: !!sent.emailed } };
 }
 
-function resetPassword(email, code, newPass) {
-  const mail = String(email || '').trim().toLowerCase();
+async function resetPasswordByToken(token, newPass) {
   if (!newPass || String(newPass).length < 8) {
     return { success: false, status: 400, error: 'A nova senha precisa ter no mínimo 8 caracteres.' };
   }
@@ -661,12 +670,11 @@ function resetPassword(email, code, newPass) {
   pruneResets(db);
   const found = db.resets.find(r =>
     r && !r.used && Number(r.expires_at) > Date.now() &&
-    String(r.email || '').toLowerCase() === mail &&
-    String(r.code) === String(code || '').trim()
+    String(r.token) === String(token || '')
   );
   if (!found) {
     writeDb(db);
-    return { success: false, status: 400, error: 'Código inválido ou expirado. Gere um novo.' };
+    return { success: false, status: 400, error: 'Link inválido ou expirado. Gere um novo.' };
   }
   const customer = db.customers.find(c => c && c.id === found.customer_id);
   if (!customer) return { success: false, status: 404, error: 'Conta não encontrada.' };
@@ -674,13 +682,19 @@ function resetPassword(email, code, newPass) {
   found.used = true;
   pruneResets(db);
   // Derruba todas as sessões antigas da conta
-  customerSessions.forEach((s, token) => {
-    if (String(s.customer_id) === String(customer.id)) customerSessions.delete(token);
+  customerSessions.forEach((s, t) => {
+    if (String(s.customer_id) === String(customer.id)) customerSessions.delete(t);
   });
   saveSessions();
   writeDb(db);
-  const token = createCustomerSessionToken(customer.id);
-  return { success: true, token, data: safeCustomer(customer) };
+  const newToken = createCustomerSessionToken(customer.id);
+  return { success: true, token: newToken, data: safeCustomer(customer) };
+}
+
+// Compat: resetPassword(email, code, ...) antigo virou token;
+// mantém assinatura (email, codeOrToken, newPass) aceitando token.
+async function resetPassword(email, codeOrToken, newPass) {
+  return resetPasswordByToken(codeOrToken, newPass);
 }
 
 function listResets() {
@@ -690,7 +704,7 @@ function listResets() {
   return db.resets.map(r => {
     const c = db.customers.find(x => x && x.id === r.customer_id) || {};
     return {
-      id: r.id, email: r.email, code: r.code,
+      id: r.id, email: r.email,
       customer_name: c.name || '', customer_phone: c.phone || '',
       expires_at: new Date(r.expires_at).toISOString(),
       created_at: r.created_at
@@ -1107,6 +1121,7 @@ module.exports = {
   updateCustomer,
   requestPasswordReset,
   resetPassword,
+  resetPasswordByToken,
   listResets,
   revokeReset,
   createCustomerSession,
