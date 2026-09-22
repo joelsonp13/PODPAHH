@@ -446,6 +446,47 @@ body.cart-lock, body.gate-blocked { overflow: hidden; }
   color: var(--text-main);
 }
 
+/* ===== MODAL DE ENDEREÇO — visual da loja (reto, 2 colunas) ===== */
+.pp-modal {
+  border-radius: 0;
+  border: 1px solid rgba(45,122,255,.35);
+  max-width: 560px;
+  box-shadow: 0 24px 70px rgba(0,0,0,.65);
+}
+.pp-modal h3 {
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: 2px;
+  font-weight: 800;
+}
+.pp-modal h3 i { color: var(--accent); }
+.pp-modal-sub { border-left: 3px solid var(--accent); padding-left: 12px; }
+.pp-form-grid { grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+.pp-form-field label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: .72rem; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--text-muted);
+}
+.pp-form-field input {
+  border-radius: 0;
+  background: rgb(30,30,30);
+  border: 1px solid rgba(255,255,255,.1);
+  padding: 11px 14px; font-size: .9rem;
+}
+.pp-form-field input:focus {
+  outline: none; border-color: var(--accent); background: rgb(30,30,30);
+  box-shadow: 0 0 0 3px rgba(45,122,255,.15);
+}
+.pp-modal-btns { gap: 10px; }
+.pp-modal-btns .ma-submit-btn { flex: 1 1 140px; width: auto; }
+.pp-modal-btns #pp-addr-save,
+.pp-modal-btns #pp-addr-confirm { flex: 1 1 100%; }
+.pp-addr-item { border-radius: 0; }
+.pp-addr-item.sel, .pp-addr-item:has(input:checked) { border-color: var(--accent); }
+.pp-addr-badge { border-radius: 0; }
+@media (max-width: 560px) {
+  .pp-form-grid { grid-template-columns: 1fr; }
+  .pp-modal { max-height: 92vh; }
+}
 /* Responsive adjustments */
 @media (max-width: 480px) {
   .pp-modal { padding: 20px; margin: 0 10px; }
