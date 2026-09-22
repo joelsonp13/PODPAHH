@@ -277,7 +277,7 @@ function safeCustomer(customer) {
   return safe;
 }
 
-function registerCustomer(name, email, password, phone) {
+async function registerCustomer(name, email, password, phone) {
   const db = readDb();
   const existing = db.customers.find(c => c.email.toLowerCase() === String(email || '').toLowerCase());
   if (existing) return { success: false, status: 400, error: 'Este e-mail já está cadastrado no sistema.' };
@@ -301,7 +301,27 @@ function registerCustomer(name, email, password, phone) {
   };
   db.customers.push(newCustomer);
   writeDb(db);
+  // Espelha no Supabase Auth (best-effort): habilita recovery por e-mail.
+  try {
+    await ensureAuthUserSafe(newCustomer, password);
+  } catch (e) { /* sem Supabase configurado: segue só local */ }
   return { success: true, data: safeCustomer(newCustomer) };
+}
+
+// Mirror no Auth sem nunca quebrar o cadastro (falta de env, offline etc.)
+async function ensureAuthUserSafe(customer, rawPassword) {
+  try {
+    const admin = supaAdmin();
+    const { error } = await admin.auth.admin.createUser({
+      email: customer.email,
+      password: String(rawPassword),
+      email_confirm: true,
+      user_metadata: { name: customer.name, customer_id: customer.id }
+    });
+    if (error && !/already|registered|exists/i.test(String(error.message || ''))) throw error;
+  } catch (e) {
+    throw e;
+  }
 }
 
 function loginCustomer(email, password, phone) {
@@ -606,120 +626,131 @@ function deleteAddress(customerId, addressId) {
   return { success: true };
 }
 
-/* ---------------- PASSWORD RESET (link por e-mail) ----------------
-   1. Cliente informa o e-mail -> gera token secreto (1h, uso único).
-   2. E-mail com link .../minha-conta.html?reset_token=... é enviado.
-   3. Cliente abre o link, digita a nova senha -> troca + nova sessão.
-   Sem e-mail cadastrado: resposta genérica (anti-enumeração). */
-const RESET_TTL = 60 * 60 * 1000;
-let mailer = null;
-function getMailer() {
-  if (!mailer) {
-    try { mailer = require('../lib/mailer'); }
-    catch (e) { mailer = { sendPasswordReset: async () => ({ success: true, emailed: false }) }; }
+/* ---------------- PASSWORD RESET (e-mail do Supabase Auth) ----------------
+   Contas vivem em public.customers, mas são ESPELHADAS em auth.users para
+   usar o sistema de e-mail do Supabase (recovery):
+   1. forgot: garante auth.user (createUser c/ senha aleatória se faltar) e
+      dispara supabase.auth.resetPasswordForEmail (redirect p/ minha-conta).
+   2. Cliente clica no link -> sessão PASSWORD_RECOVERY no navegador.
+   3. resetSupabase: frontend manda o access_token; servidor confere o dono
+      via auth.getUser, atualiza o hash local + senha do auth, derruba
+      sessões antigas e devolve sessão própria. */
+let _supaAdmin = null;
+let _supaAnon = null;
+function supaEnv() {
+  return {
+    url: process.env.SUPABASE_URL,
+    serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY,
+    anonKey: process.env.SUPABASE_ANON_KEY
+  };
+}
+function supaAdmin() {
+  if (!_supaAdmin) {
+    const { url, serviceKey } = supaEnv();
+    if (!url || !serviceKey) throw new Error('Supabase não configurado (SUPABASE_URL / SERVICE_ROLE).');
+    _supaAdmin = require('@supabase/supabase-js').createClient(url, serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
   }
-  return mailer;
+  return _supaAdmin;
+}
+function supaAnon() {
+  if (!_supaAnon) {
+    const { url, anonKey } = supaEnv();
+    if (!url || !anonKey) throw new Error('Supabase não configurado (SUPABASE_URL / ANON).');
+    _supaAnon = require('@supabase/supabase-js').createClient(url, anonKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+  }
+  return _supaAnon;
+}
+function recoveryRedirect() {
+  const base = String(process.env.APP_URL || 'https://podpahh.vercel.app').replace(/\/+$/, '');
+  return base + '/pedevapor-shop/pages/minha-conta.html';
 }
 
-function pruneResets(db) {
-  const now = Date.now();
-  db.resets = (db.resets || []).filter(r => r && !r.used && Number(r.expires_at) > now);
+// Garante entrada em auth.users (idempotente). Senha aleatória: o login
+// continua pelo hash local; o auth serve só p/ e-mails de recovery.
+async function ensureAuthUser(customer) {
+  const admin = supaAdmin();
+  const { data, error } = await admin.auth.admin.createUser({
+    email: customer.email,
+    password: crypto.randomBytes(24).toString('hex'),
+    email_confirm: true,
+    user_metadata: { name: customer.name, customer_id: customer.id }
+  });
+  if (!error) return data.user;
+  const msg = String((error && error.message) || '');
+  if (/already|registered|exists/i.test(msg)) return null; // já existe: ok
+  throw new Error(msg || 'Falha ao espelhar conta no Auth.');
 }
 
 async function requestPasswordReset(email) {
-  const db = readDb();
-  pruneResets(db);
   const mail = String(email || '').trim().toLowerCase();
   if (!mail || mail.indexOf('@') === -1) {
     return { success: false, status: 400, error: 'Informe um e-mail válido.' };
   }
+  const db = readDb();
   const customer = db.customers.find(c => String(c.email || '').toLowerCase() === mail);
-  if (!customer) {
-    writeDb(db);
-    return { success: true, data: { emailed: false } };
+  // Anti-enumeração: resposta genérica sempre.
+  if (!customer) return { success: true, data: { emailed: false } };
+  try {
+    await ensureAuthUser(customer);
+    const { error } = await supaAnon().auth.resetPasswordForEmail(customer.email, {
+      redirectTo: recoveryRedirect()
+    });
+    if (error) return { success: false, status: 502, error: 'Não foi possível enviar o e-mail. Tente mais tarde.' };
+    return { success: true, data: { emailed: true } };
+  } catch (err) {
+    return { success: false, status: 502, error: err.message || 'Provedor de e-mail indisponível.' };
   }
-  db.resets = db.resets.filter(r => r.customer_id !== customer.id);
-  const token = crypto.randomBytes(32).toString('hex');
-  const item = {
-    id: 'rst_' + Date.now().toString(36) + crypto.randomBytes(4).toString('hex'),
-    customer_id: customer.id,
-    email: customer.email,
-    token,
-    expires_at: Date.now() + RESET_TTL,
-    used: false,
-    created_at: new Date().toISOString()
-  };
-  db.resets.push(item);
-  writeDb(db);
-  const sent = await getMailer().sendPasswordReset(customer.email, customer.name, token);
-  if (!sent.success) {
-    // Falha no envio: invalida o token para não deixar link morto
-    const db2 = readDb();
-    db2.resets = (db2.resets || []).filter(r => r.id !== item.id);
-    writeDb(db2);
-    return { success: false, status: 502, error: sent.error || 'Não foi possível enviar o e-mail. Tente mais tarde.' };
-  }
-  return { success: true, data: { emailed: !!sent.emailed } };
 }
 
-async function resetPasswordByToken(token, newPass) {
+// Troca via sessão de recovery do Supabase: prova = access_token válido.
+async function resetPasswordSupabase(supaToken, newPass) {
   if (!newPass || String(newPass).length < 8) {
     return { success: false, status: 400, error: 'A nova senha precisa ter no mínimo 8 caracteres.' };
   }
-  const db = readDb();
-  pruneResets(db);
-  const found = db.resets.find(r =>
-    r && !r.used && Number(r.expires_at) > Date.now() &&
-    String(r.token) === String(token || '')
-  );
-  if (!found) {
-    writeDb(db);
-    return { success: false, status: 400, error: 'Link inválido ou expirado. Gere um novo.' };
+  if (!supaToken) return { success: false, status: 400, error: 'Sessão de recuperação inválida.' };
+  let authUser;
+  try {
+    const { data, error } = await supaAdmin().auth.getUser(String(supaToken));
+    if (error || !data || !data.user) {
+      return { success: false, status: 401, error: 'Link inválido ou expirado. Gere um novo.' };
+    }
+    authUser = data.user;
+  } catch (err) {
+    return { success: false, status: 401, error: 'Link inválido ou expirado. Gere um novo.' };
   }
-  const customer = db.customers.find(c => c && c.id === found.customer_id);
+  const mail = String(authUser.email || '').toLowerCase();
+  const db = readDb();
+  const customer = db.customers.find(c => String(c.email || '').toLowerCase() === mail);
   if (!customer) return { success: false, status: 404, error: 'Conta não encontrada.' };
   customer.password = hashPassword(newPass);
-  found.used = true;
-  pruneResets(db);
-  // Derruba todas as sessões antigas da conta
+  writeDb(db);
+  // Sincroniza a senha no Auth também (próximos recoveries/logins diretos)
+  try {
+    await supaAdmin().auth.admin.updateUserById(authUser.id, { password: String(newPass) });
+  } catch (e) { /* hash local é a fonte da verdade do login */ }
+  // Derruba sessões próprias antigas
   customerSessions.forEach((s, t) => {
     if (String(s.customer_id) === String(customer.id)) customerSessions.delete(t);
   });
   saveSessions();
-  writeDb(db);
-  const newToken = createCustomerSessionToken(customer.id);
-  return { success: true, token: newToken, data: safeCustomer(customer) };
+  const token = createCustomerSessionToken(customer.id);
+  return { success: true, token, data: safeCustomer(customer) };
 }
 
-// Compat: resetPassword(email, code, ...) antigo virou token;
-// mantém assinatura (email, codeOrToken, newPass) aceitando token.
-async function resetPassword(email, codeOrToken, newPass) {
-  return resetPasswordByToken(codeOrToken, newPass);
+// Compat antiga (Resend): removida — mantido só para não quebrar imports.
+async function resetPassword() {
+  return { success: false, status: 410, error: 'Fluxo antigo desativado. Use o link do e-mail.' };
+}
+async function resetPasswordByToken() {
+  return resetPassword();
 }
 
-function listResets() {
-  const db = readDb();
-  pruneResets(db);
-  writeDb(db);
-  return db.resets.map(r => {
-    const c = db.customers.find(x => x && x.id === r.customer_id) || {};
-    return {
-      id: r.id, email: r.email,
-      customer_name: c.name || '', customer_phone: c.phone || '',
-      expires_at: new Date(r.expires_at).toISOString(),
-      created_at: r.created_at
-    };
-  });
-}
-
-function revokeReset(id) {
-  const db = readDb();
-  const before = (db.resets || []).length;
-  db.resets = (db.resets || []).filter(r => String(r.id) !== String(id));
-  if (db.resets.length === before) return { success: false, status: 404, error: 'Solicitação não encontrada.' };
-  writeDb(db);
-  return { success: true };
-}
+function listResets() { return []; }
+function revokeReset() { return { success: false, status: 404, error: 'Recurso desativado.' }; }
 
 /* ---------------- WISHLIST (FAVORITOS POR CONTA) ----------------
    Item: { id, customer_id, product_id, model_id ('': produto), created_at }
@@ -1121,7 +1152,7 @@ module.exports = {
   updateCustomer,
   requestPasswordReset,
   resetPassword,
-  resetPasswordByToken,
+  resetPasswordSupabase,
   listResets,
   revokeReset,
   createCustomerSession,

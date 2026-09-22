@@ -158,9 +158,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // ---- ESQUECI A SENHA (link por e-mail, vale 1h) ----
-  // O link "Esqueceu a senha?" abre o passo 1. O e-mail leva para
-  // .../minha-conta.html?reset_token=... que abre direto o passo 2.
+  // ---- ESQUECI A SENHA (e-mail de recovery do Supabase Auth) ----
+  // Passo 1: pede o e-mail -> Supabase envia o link.
+  // Passo 2: link abre .../minha-conta.html (sessão PASSWORD_RECOVERY) ->
+  //          formulário de nova senha -> POST /api/auth/reset c/ access_token.
   document.querySelectorAll('.ma-forgot-link').forEach(function (a) {
     a.addEventListener('click', function (e) {
       e.preventDefault();
@@ -168,14 +169,42 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  try {
-    var _rt = new URLSearchParams(window.location.search).get('reset_token');
-    if (_rt) {
-      document.addEventListener('DOMContentLoaded', function () {
-        setTimeout(function () { window.vsForgotToCode(_rt); }, 400);
-      });
+  var SUPA_URL = 'https://qmspfcfdcuvvaxdqggzg.supabase.co';
+  var SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtc3BmY2ZkY3V2dmF4ZHFnZ3pnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MDIzMzUsImV4cCI6MjEwMzI3ODMzNX0.IYsEPUTEGyV43xVPCgb7QnglSMISBaxRpY5uBoBYVBc';
+  var supaRecovery = null;
+
+  function supaClient() {
+    if (supaRecovery) return supaRecovery;
+    if (!window.supabase || !window.supabase.createClient) return null;
+    supaRecovery = window.supabase.createClient(SUPA_URL, SUPA_ANON);
+    return supaRecovery;
+  }
+
+  // Detecta retorno do link de recovery (hash #access_token ou ?code=).
+  function hasRecoveryParams() {
+    try {
+      if ((window.location.hash || '').indexOf('access_token') !== -1) return true;
+      var q = new URLSearchParams(window.location.search);
+      if (q.get('code') || q.get('type') === 'recovery') return true;
+    } catch (e) {}
+    return false;
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var client = supaClient();
+    if (!client) return;
+    client.auth.onAuthStateChange(function (event) {
+      if (event === 'PASSWORD_RECOVERY') {
+        setTimeout(function () { window.vsForgotToCodeSupa(); }, 400);
+      }
+    });
+    // Fallback: parâmetros na URL mas evento ainda não disparou
+    if (hasRecoveryParams()) {
+      setTimeout(function () {
+        if (!document.getElementById('pp-forgot-overlay')) window.vsForgotToCodeSupa();
+      }, 1500);
     }
-  } catch (e) {}
+  });
 
   function forgotShell(inner) {
     return '<div id="pp-forgot-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:3000;display:flex;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)vsForgotClose()">' +
@@ -237,35 +266,48 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (e) { fgMsg('Erro de conexão.'); }
   };
 
-  window.vsForgotToCode = function(token) {
+  // Passo 2 via sessão de recovery do Supabase (chegou pelo link do e-mail).
+  window.vsForgotToCodeSupa = function() {
     if (!document.getElementById('pp-forgot-overlay')) window.vsForgotOpen();
     var body = document.getElementById('pp-forgot-body');
     if (!body) return;
     body.innerHTML =
-      '<p style="color:var(--dim);font-size:.85rem;margin:0 0 14px">Crie sua nova senha abaixo.</p>' +
-      '<input type="hidden" id="fg_token" value="' + esc(String(token || '')).replace(/"/g, '&quot;') + '">' +
+      '<p style="color:var(--dim);font-size:.85rem;margin:0 0 14px">Link verificado. Crie sua nova senha abaixo.</p>' +
       '<div class="acc-field"><label>NOVA SENHA (MÍN. 8) *</label><input type="password" id="fg_pass" autocomplete="new-password" style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.9rem;border-radius:0;box-sizing:border-box"></div>' +
       '<div class="acc-field"><label>CONFIRMAR NOVA SENHA *</label><input type="password" id="fg_pass2" autocomplete="new-password" style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.9rem;border-radius:0;box-sizing:border-box"></div>' +
       '<div id="fg_msg" style="font-size:.82rem;margin-bottom:10px"></div>' +
-      '<button onclick="vsResetSend()" class="pp-btn-ghost" style="width:100%;border-color:var(--c);color:var(--c)"><i class="fa fa-save"></i> TROCAR SENHA</button>';
+      '<button onclick="vsResetSendSupa()" class="pp-btn-ghost" style="width:100%;border-color:var(--c);color:var(--c)"><i class="fa fa-save"></i> TROCAR SENHA</button>';
   };
 
-  window.vsResetSend = async function() {
+  window.vsForgotToCode = function() {
+    window.vsForgotToCodeSupa();
+  };
+
+  window.vsResetSendSupa = async function() {
     var g = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
-    var token = g('fg_token'), p1 = g('fg_pass'), p2 = g('fg_pass2');
-    if (!token) { fgMsg('Link inválido. Gere um novo.'); return; }
+    var p1 = g('fg_pass'), p2 = g('fg_pass2');
     if (p1.length < 8) { fgMsg('A nova senha precisa de no mínimo 8 caracteres.'); return; }
     if (p1 !== p2) { fgMsg('A confirmação não confere.'); return; }
+    var client = supaClient();
+    if (!client) { fgMsg('Sessão de recuperação indisponível. Gere um novo link.'); return; }
     try {
+      var sess = await client.auth.getSession();
+      var token = sess && sess.data && sess.data.session && sess.data.session.access_token;
+      if (!token) { fgMsg('Sessão expirada. Gere um novo link.'); return; }
       var res = await window.PodpahhDB.resetPassword(token, p1);
       if (!res || !res.success) { fgMsg(res && res.error ? res.error : 'Erro ao trocar.'); return; }
       try {
         if (res.token && res.data) saveSession(res.token, res.data);
+        await client.auth.signOut();
       } catch (e) {}
       window.vsForgotClose();
       alert('Senha trocada com sucesso! Você já está logado.');
-      window.location.reload();
+      window.location.href = window.location.pathname;
     } catch (e) { fgMsg('Erro de conexão.'); }
+  };
+
+  window.vsResetSend = function() {
+    window.vsResetSendSupa();
   };
 
   // Renderiza área autenticada e gerenciamento de endereços se logado

@@ -114,9 +114,9 @@ app.post('/api/admin/change-password', requireAdmin, (req, res) => {
 });
 
 // ---------- ROTAS PÚBLICAS (LOJA DOS USUÁRIOS) ----------
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   const { name, email, password, phone } = req.body || {};
-  const result = db.registerCustomer(name, email, password, phone);
+  const result = await db.registerCustomer(name, email, password, phone);
   res.status(result.status || 200).json(result);
 });
 
@@ -139,8 +139,8 @@ app.post('/api/auth/forgot', loginRateLimit, async (req, res) => {
 });
 
 app.post('/api/auth/reset', loginRateLimit, async (req, res) => {
-  const { token, new_password } = req.body || {};
-  const result = await db.resetPasswordByToken(token, new_password);
+  const { supa_token, new_password } = req.body || {};
+  const result = await db.resetPasswordSupabase(supa_token, new_password);
   res.status(result.status || 200).json(result);
 });
 

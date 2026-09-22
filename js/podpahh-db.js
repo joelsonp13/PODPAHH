@@ -132,12 +132,12 @@
       }
     },
 
-    resetPassword: async function(token, newPassword) {
+    resetPassword: async function(supaToken, newPassword) {
       try {
         var res = await fetch(LOCAL_API + '/auth/reset', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: token, new_password: newPassword })
+          body: JSON.stringify({ supa_token: supaToken, new_password: newPassword })
         });
         return await res.json();
       } catch (err) {

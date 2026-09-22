@@ -17,8 +17,8 @@ test.afterEach(() => {
   if (fs.existsSync(TEST_DB)) fs.unlinkSync(TEST_DB);
 });
 
-test('address validation rejects incomplete or invalid fields', () => {
-  const reg = db.registerCustomer('Cliente Teste', 'teste@email.com', 'senha12345', '41999999999');
+test('address validation rejects incomplete or invalid fields', async () => {
+  const reg = await db.registerCustomer('Cliente Teste', 'teste@email.com', 'senha12345', '41999999999');
   assert.equal(reg.success, true);
   const customerId = reg.data.id;
 
@@ -40,9 +40,9 @@ test('address validation rejects incomplete or invalid fields', () => {
   assert.equal(res2.status, 400);
 });
 
-test('address creation respects default replacement and ownership', () => {
-  const reg1 = db.registerCustomer('User Um', 'um@email.com', 'senha12345', '41988888888');
-  const reg2 = db.registerCustomer('User Dois', 'dois@email.com', 'senha12345', '41977777777');
+test('address creation respects default replacement and ownership', async () => {
+  const reg1 = await db.registerCustomer('User Um', 'um@email.com', 'senha12345', '41988888888');
+  const reg2 = await db.registerCustomer('User Dois', 'dois@email.com', 'senha12345', '41977777777');
   const c1 = reg1.data.id;
   const c2 = reg2.data.id;
 
@@ -88,7 +88,7 @@ test('address creation respects default replacement and ownership', () => {
   assert.equal(check.forbidden, true);
 });
 
-test('order saves address snapshot correctly', () => {
+test('order saves address snapshot correctly', async () => {
   const orderRes = db.saveOrder({
     items: [{ id: 'prod_1', name: 'Pod', price: 50, qty: 1 }],
     subtotal: 50,
@@ -105,7 +105,7 @@ test('order saves address snapshot correctly', () => {
   assert.equal(orderRes.data.status, 'pendente');
 });
 
-test('order rejects missing address, phone or items', () => {
+test('order rejects missing address, phone or items', async () => {
   const base = {
     items: [{ id: 'prod_1', name: 'Pod', price: 50, qty: 1 }],
     subtotal: 50,
