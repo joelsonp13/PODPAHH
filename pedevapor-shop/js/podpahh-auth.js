@@ -181,17 +181,22 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Parâmetros de recovery em qualquer formato (hash #access_token,
-  // ?code= PKCE ou ?token_hash=&type=recovery).
+  // ?code= PKCE ou ?token_hash=&type=recovery). Também detecta erro
+  // (link expirado/usado) para avisar em vez de cair no login em silêncio.
   function recoveryParams() {
     try {
       var hash = String(window.location.hash || '');
       var q = new URLSearchParams(window.location.search);
+      var hq = new URLSearchParams(hash.charAt(0) === '#' ? hash.substring(1) : hash);
+      var err = hq.get('error') || q.get('error');
       return {
         implicit: hash.indexOf('access_token') !== -1,
         code: q.get('code') || '',
         tokenHash: q.get('token_hash') || '',
         type: q.get('type') || '',
-        any: hash.indexOf('access_token') !== -1 || !!q.get('code') || !!q.get('token_hash') || q.get('type') === 'recovery'
+        error: err || '',
+        errorCode: hq.get('error_code') || q.get('error_code') || '',
+        any: hash.indexOf('access_token') !== -1 || !!q.get('code') || !!q.get('token_hash') || q.get('type') === 'recovery' || !!err
       };
     } catch (e) { return { any: false }; }
   }
@@ -207,7 +212,15 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    if (!recoveryParams().any) return;
+    var rp = recoveryParams();
+    if (!rp.any) return;
+    // Link morto (expirado/usado): avisa de cara em vez de mostrar o login.
+    if (rp.error) {
+      setTimeout(function () {
+        recoveryNotice('Este link expirou ou já foi usado. Gere um novo link abaixo — ele vale por 1 hora e abre o formulário automaticamente.');
+      }, 800);
+      return;
+    }
     var client = supaClient();
     if (!client) {
       setTimeout(function () {
