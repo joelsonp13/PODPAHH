@@ -92,8 +92,8 @@
         </div>
       </div>
       <div class="cart-footer-btns">
-        <a href="carrinho.html" class="cart-checkout-btn"><i class="fa fa-lock"></i> FINALIZAR COMPRA</a>
-        <a href="carrinho.html" class="cart-view-btn"><i class="fa fa-shopping-cart"></i> VER CARRINHO</a>
+        <a href="carrinho.html" class="ma-submit-btn" style="text-decoration:none;justify-content:center"><i class="fa fa-lock"></i> FINALIZAR COMPRA</a>
+        <a href="carrinho.html" class="ma-submit-btn" style="text-decoration:none;justify-content:center"><i class="fa fa-shopping-cart"></i> VER CARRINHO</a>
       </div>
     </div>
   </div>
@@ -463,10 +463,10 @@
         '<div class="pdp-label">Quantidade:</div>' +
         '<div class="pdp-buyrow">' +
         '<div class="pdp-qty"><button onclick="pQMinus()">−</button><input id="pdpQty" value="1" inputmode="numeric" oninput="pQClamp(this)"><button onclick="pQPlus()">+</button></div>' +
-        '<button class="pdp-add" onclick="pAddCurrent(this,false)"><i class="fa fa-cart-plus"></i> ADICIONAR</button>' +
+        '<button class="ma-submit-btn" style="flex:1;justify-content:center" onclick="pAddCurrent(this,false)"><i class="fa fa-cart-plus"></i> ADICIONAR</button>' +
         '</div>' +
         '<div class="pdp-buyrow">' +
-        '<button class="pdp-buy" onclick="pAddCurrent(this,true)"><i class="fa fa-bolt"></i> COMPRAR AGORA</button>' +
+        '<button class="ma-submit-btn" style="flex:1;justify-content:center" onclick="pAddCurrent(this,true)"><i class="fa fa-bolt"></i> COMPRAR AGORA</button>' +
         '<button class="p-wish pdp-wish" onclick="vsToggleWish(\'' + String(p.id).replace(/'/g, '') + '\',this)" title="Favoritar"><i class="fa fa-heart"></i></button>' +
         '</div>' +
         '<div class="pdp-trust">' +

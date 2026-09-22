@@ -456,7 +456,10 @@ document.addEventListener('DOMContentLoaded', function () {
       var panel = document.getElementById('accTab-' + t);
       var btn = document.getElementById('accBtn-' + t);
       if (panel) panel.style.display = (t === name) ? 'block' : 'none';
-      if (btn) btn.classList.toggle('on', t === name);
+      if (btn) {
+        btn.classList.toggle('on', t === name);
+        btn.style.opacity = (t === name) ? '1' : '.55';
+      }
     });
   };
 
@@ -637,7 +640,7 @@ document.addEventListener('DOMContentLoaded', function () {
       return '<div style="text-align:center;padding:36px 16px;color:var(--dim)">' +
         '<i class="fa fa-receipt" style="font-size:2.2rem;opacity:.4;display:block;margin-bottom:12px"></i>' +
         '<p style="margin:0 0 14px">Você ainda não fez nenhum pedido.</p>' +
-        '<a href="' + accStoreHome() + '" class="pp-btn-ghost" style="display:inline-block;border-color:var(--c);color:var(--c)"><i class="fa fa-store"></i> VER PRODUTOS</a></div>';
+        '<a href="' + accStoreHome() + '" class="ma-submit-btn" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none"><i class="fa fa-store"></i> VER PRODUTOS</a></div>';
     }
     var first = orders.slice(0, ACC_ORDERS_PAGE).map(orderCardHtml).join('');
     var html = '<div class="acc-ordgrid">' + first + '</div>';
@@ -646,7 +649,7 @@ document.addEventListener('DOMContentLoaded', function () {
       var left = orders.length - ACC_ORDERS_PAGE;
       html += '<div id="accOrdersRest" style="display:none"><div class="acc-ordgrid" style="margin-top:12px">' + rest + '</div></div>' +
         '<div style="text-align:center;margin-top:14px">' +
-        '<button id="accOrdersMoreBtn" data-label="MOSTRAR MAIS (' + left + ') <i class=&quot;fa fa-chevron-down&quot;></i>" onclick="vsOrdersMore()" class="pp-btn-ghost" style="border-color:var(--c);color:var(--c)">MOSTRAR MAIS (' + left + ') <i class="fa fa-chevron-down"></i></button></div>';
+        '<button id="accOrdersMoreBtn" data-label="MOSTRAR MAIS (' + left + ') <i class=&quot;fa fa-chevron-down&quot;></i>" onclick="vsOrdersMore()" class="ma-submit-btn" style="justify-content:center">MOSTRAR MAIS (' + left + ') <i class="fa fa-chevron-down"></i></button></div>';
     }
     return html;
   }
@@ -656,7 +659,7 @@ document.addEventListener('DOMContentLoaded', function () {
       return '<div style="text-align:center;padding:36px 16px;color:var(--dim)">' +
         '<i class="fa fa-heart" style="font-size:2.2rem;opacity:.4;display:block;margin-bottom:12px"></i>' +
         '<p style="margin:0 0 14px">Nenhum favorito ainda. Toque no <i class="fa fa-heart"></i> dos produtos para salvar aqui.</p>' +
-        '<a href="' + accStoreHome() + '" class="pp-btn-ghost" style="display:inline-block;border-color:var(--c);color:var(--c)"><i class="fa fa-store"></i> VER PRODUTOS</a></div>';
+        '<a href="' + accStoreHome() + '" class="ma-submit-btn" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none"><i class="fa fa-store"></i> VER PRODUTOS</a></div>';
     }
     return '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">' +
       wishlist.map(function (w) {
@@ -677,8 +680,8 @@ document.addEventListener('DOMContentLoaded', function () {
           (modelName ? '<div style="font-size:.76rem;color:var(--c);margin-bottom:4px"><i class="fa fa-layer-group"></i> ' + esc(modelName) + '</div>' : '') +
           '<div style="color:#4ade80;font-weight:800;margin-bottom:10px">' + fmtMoney(price) + '</div>' +
           '<div style="display:flex;gap:8px">' +
-          '<button onclick="vsAccountBuy(\'' + pid + '\')" class="pp-btn-ghost" style="flex:1;border-color:var(--c);color:var(--c);padding:8px;font-size:.78rem"><i class="fa fa-cart-plus"></i> COMPRAR</button>' +
-          '<button onclick="vsAccountUnwish(\'' + pid + '\',\'' + mid + '\')" class="pp-btn-ghost" style="border-color:rgba(255,50,50,.3);color:#ff5252;padding:8px 10px" title="Remover"><i class="fa fa-trash"></i></button>' +
+          '<button onclick="vsAccountBuy(\'' + pid + '\')" class="ma-submit-btn" style="flex:1;justify-content:center;padding:8px;font-size:.78rem"><i class="fa fa-cart-plus"></i> COMPRAR</button>' +
+          '<button onclick="vsAccountUnwish(\'' + pid + '\',\'' + mid + '\')" class="ma-submit-btn" style="width:auto;justify-content:center;padding:8px 10px" title="Remover"><i class="fa fa-trash"></i></button>' +
           '</div></div></div>';
       }).join('') + '</div>';
   }
@@ -723,8 +726,8 @@ document.addEventListener('DOMContentLoaded', function () {
           '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">' +
           '<b style="color:var(--txt);font-size:.92rem">' + esc(a.label || 'Endereço') + ' ' + (a.is_default ? '<span style="background:var(--c);color:#000;font-size:.65rem;padding:2px 6px;border-radius:0;font-weight:700">PADRÃO</span>' : '') + '</b>' +
           '<div style="display:flex;gap:8px">' +
-          '<button onclick="vsEditAddressModal(\'' + a.id + '\')" class="pp-btn-ghost" style="padding:4px 8px;font-size:.72rem"><i class="fa fa-edit"></i></button>' +
-          '<button onclick="vsDeleteAddressItem(\'' + a.id + '\')" class="pp-btn-ghost" style="padding:4px 8px;font-size:.72rem;border-color:rgba(255,50,50,.3);color:#ff5252"><i class="fa fa-trash"></i></button>' +
+          '<button onclick="vsEditAddressModal(\'' + a.id + '\')" class="ma-submit-btn" style="width:auto;justify-content:center;padding:4px 8px;font-size:.72rem"><i class="fa fa-edit"></i></button>' +
+          '<button onclick="vsDeleteAddressItem(\'' + a.id + '\')" class="ma-submit-btn" style="width:auto;justify-content:center;padding:4px 8px;font-size:.72rem"><i class="fa fa-trash"></i></button>' +
           '</div></div>' +
           '<div style="color:rgba(232,232,240,.8);font-size:.85rem;line-height:1.5">' +
           'Destinatário: <b>' + esc(a.recipient_name) + '</b> (' + esc(a.phone) + ')<br>' +
@@ -753,7 +756,7 @@ document.addEventListener('DOMContentLoaded', function () {
           '<span style="color:var(--txt)"><code style="font-size:.72rem;opacity:.7">' + esc(o.id) + '</code> &nbsp; ' + fmtDate(o.created_at) + '</span>' +
           '<span style="display:flex;align-items:center;gap:10px">' + orderBadge(o.status) + '<b style="color:#4ade80">' + fmtMoney(o.total) + '</b></span></div>';
       }).join('') +
-      '<div style="text-align:right;margin-top:10px"><button onclick="vsAccountTab(\'orders\')" class="pp-btn-ghost" style="font-size:.78rem">VER TODOS <i class="fa fa-arrow-right"></i></button></div>'
+      '<div style="text-align:right;margin-top:10px"><button onclick="vsAccountTab(\'orders\')" class="ma-submit-btn" style="width:auto;justify-content:center;font-size:.78rem">VER TODOS <i class="fa fa-arrow-right"></i></button></div>'
       : '<div class="acc-empty"><i class="fa fa-receipt"></i><p style="margin:0 0 18px">Você ainda não fez nenhum pedido.</p>' +
       '<a href="' + accStoreHome() + '" class="acc-trap"><span>IR PARA A LOJA</span></a></div>';
 
@@ -797,7 +800,7 @@ document.addEventListener('DOMContentLoaded', function () {
       '<div class="acc-panel">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">' +
       '<h3 class="acc-h3" style="margin:0"><i class="fa fa-map-marker-alt"></i> MEUS ENDEREÇOS</h3>' +
-      '<button onclick="vsToggleAccountAddressForm(true)" class="pp-btn-ghost" style="border-color:var(--c);color:var(--c)"><i class="fa fa-plus"></i> ADICIONAR ENDEREÇO</button>' +
+      '<button onclick="vsToggleAccountAddressForm(true)" class="ma-submit-btn" style="justify-content:center"><i class="fa fa-plus"></i> ADICIONAR ENDEREÇO</button>' +
       '</div>' +
       addrHtml +
       '<div id="accountAddressFormWrap" style="display:none;background:transparent;border:1px solid var(--brd);padding:20px;border-radius:0;margin-top:16px">' +
@@ -825,8 +828,8 @@ document.addEventListener('DOMContentLoaded', function () {
       '<div><label style="font-size:.72rem;color:var(--dim);display:block;margin-bottom:4px">UF (ESTADO) *</label><input type="text" id="acc_state" maxlength="2" required style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.88rem;border-radius:0"></div>' +
       '</div>' +
       '<div style="display:flex;gap:10px">' +
-      '<button type="submit" class="pp-btn-ghost" style="flex:1;border-color:var(--c);color:var(--c)"><i class="fa fa-save"></i> SALVAR ENDEREÇO</button>' +
-      '<button type="button" onclick="vsToggleAccountAddressForm(false)" class="pp-btn-ghost" style="border-color:rgba(255,50,50,.3);color:#ff5252">CANCELAR</button>' +
+      '<button type="submit" class="ma-submit-btn" style="flex:1;justify-content:center"><i class="fa fa-save"></i> SALVAR ENDEREÇO</button>' +
+      '<button type="button" onclick="vsToggleAccountAddressForm(false)" class="ma-submit-btn" style="width:auto;justify-content:center">CANCELAR</button>' +
       '</div>' +
       '</form>' +
       '</div>' +
@@ -839,7 +842,7 @@ document.addEventListener('DOMContentLoaded', function () {
       '<div class="acc-field"><label>E-MAIL (NÃO PODE SER ALTERADO)</label><input type="email" value="' + esc(user.email).replace(/"/g, '&quot;') + '" disabled style="opacity:.55"></div>' +
       '<div class="acc-field"><label>CLIENTE DESDE</label><input type="text" value="' + esc(memberSince) + '" disabled style="opacity:.55"></div>' +
       '<div id="acc_profile_msg" style="font-size:.85rem;margin-bottom:10px"></div>' +
-      '<button type="submit" class="pp-btn-ghost" style="width:100%;border-color:var(--c);color:var(--c)"><i class="fa fa-save"></i> SALVAR DADOS</button>' +
+      '<button type="submit" class="ma-submit-btn" style="width:100%;justify-content:center"><i class="fa fa-save"></i> SALVAR DADOS</button>' +
       '</form></div></div>' +
       '<div id="accTab-wishlist" style="display:none">' +
       '<div class="acc-panel"><h3 class="acc-h3"><i class="fa fa-heart"></i> MEUS FAVORITOS</h3>' +

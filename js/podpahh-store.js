@@ -405,7 +405,7 @@
     if (!mount) return;
     mount.innerHTML = '<div style="background:var(--bg3);border:1px solid var(--brd);padding:14px;border-radius:8px;margin-bottom:16px;text-align:center">' +
       '<p style="font-size:.85rem;margin:0 0 10px;color:var(--txt)">Sua sessão é antiga. Entre novamente para usar seus endereços.</p>' +
-      '<a href="../pages/minha-conta.html" class="pp-btn-ghost" style="display:inline-block;border-color:var(--c);color:var(--c)"><i class="fa fa-user"></i> ENTRAR NOVAMENTE</a>' +
+      '<a href="../pages/minha-conta.html" class="ma-submit-btn" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none"><i class="fa fa-user"></i> ENTRAR NOVAMENTE</a>' +
       '</div>';
   }
 
@@ -416,7 +416,7 @@
     if (!user) {
       mount.innerHTML = '<div style="background:var(--bg3);border:1px solid var(--brd);padding:14px;border-radius:8px;margin-bottom:16px;text-align:center">' +
         '<p style="font-size:.85rem;margin:0 0 10px;color:var(--txt)">Identifique-se para carregar seus endereços salvos.</p>' +
-        '<a href="../pages/minha-conta.html" class="pp-btn-ghost" style="display:inline-block"><i class="fa fa-user"></i> ENTRAR / CRIAR CONTA</a>' +
+        '<a href="../pages/minha-conta.html" class="ma-submit-btn" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none"><i class="fa fa-user"></i> ENTRAR / CRIAR CONTA</a>' +
         '</div>';
       return;
     }
@@ -424,7 +424,7 @@
     var html = '<div style="background:var(--bg3);border:1px solid var(--brd);padding:14px;border-radius:8px;margin-bottom:16px">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
       '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:2px;color:var(--c)"><i class="fa fa-map-marker-alt"></i> ENDEREÇO DE ENTREGA</span>' +
-      (cachedAddresses.length ? '<button type="button" onclick="vsToggleAddressForm(true)" style="background:none;border:none;color:var(--c);font-size:.75rem;cursor:pointer">+ Novo Endereço</button>' : '') +
+      (cachedAddresses.length ? '<button type="button" onclick="vsToggleAddressForm(true)" class="ma-submit-btn" style="justify-content:center;font-size:.75rem">+ Novo Endereço</button>' : '') +
       '</div>';
 
     if (!cachedAddresses.length) {
@@ -450,7 +450,7 @@
         '<input type="text" name="city" placeholder="Cidade *" required style="background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:8px;font-size:.82rem">' +
         '<input type="text" name="state" placeholder="UF *" maxlength="2" required style="background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:8px;font-size:.82rem">' +
         '</div>' +
-        '<button type="submit" class="pp-btn-ghost" style="width:100%;border-color:var(--c);color:var(--c)"><i class="fa fa-save"></i> SALVAR E USAR ESTE ENDEREÇO</button>' +
+        '<button type="submit" class="ma-submit-btn" style="width:100%;justify-content:center"><i class="fa fa-save"></i> SALVAR E USAR ESTE ENDEREÇO</button>' +
         '</form>';
     } else {
       html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">';
@@ -490,8 +490,8 @@
         '<input type="text" name="state" placeholder="UF *" maxlength="2" required style="background:var(--bg2);border:1px solid var(--brd);color:var(--txt);padding:8px;font-size:.82rem">' +
         '</div>' +
         '<div style="display:flex;gap:8px">' +
-        '<button type="submit" class="pp-btn-ghost" style="flex:1;border-color:var(--c);color:var(--c)"><i class="fa fa-save"></i> SALVAR</button>' +
-        '<button type="button" onclick="vsToggleAddressForm(false)" class="pp-btn-ghost" style="border-color:rgba(255,50,50,.3);color:#ff5252">CANCELAR</button>' +
+        '<button type="submit" class="ma-submit-btn" style="flex:1;justify-content:center"><i class="fa fa-save"></i> SALVAR</button>' +
+        '<button type="button" onclick="vsToggleAddressForm(false)" class="ma-submit-btn" style="justify-content:center">CANCELAR</button>' +
         '</div>' +
         '</form>' +
         '</div>';
@@ -623,7 +623,7 @@
       mount.innerHTML = '<div class="pp-cart-empty"><i class="fa fa-shopping-bag"></i>' +
         '<h2>Seu carrinho está vazio</h2>' +
         '<p>Adicione produtos para continuar.</p>' +
-        '<a class="pp-btn-primary" href="../index.html">VER PRODUTOS</a></div>';
+        '<a class="ma-submit-btn" href="../pages/loja.html" style="text-decoration:none;justify-content:center">VER PRODUTOS</a></div>';
       return;
     }
     var rows = '', sub = 0;
@@ -646,16 +646,16 @@
       '<div class="pp-cart-grid">' +
       '<div class="pp-cart-items"><table class="pp-cart-table"><tbody>' + rows + '</tbody></table>' +
       '<div class="pp-cart-actions">' +
-      '<a href="../pages/loja.html" class="pp-btn-ghost" style="display:none"></a>' +
-      '<a href="../index.html" class="pp-btn-ghost"><i class="fa fa-arrow-left"></i> CONTINUAR COMPRANDO</a>' +
-      '<button class="pp-btn-ghost" onclick="vsClearCart()"><i class="fa fa-trash"></i> ESVAZIAR</button>' +
+      '<a href="../pages/loja.html" class="ma-submit-btn" style="display:none"></a>' +
+      '<a href="../pages/loja.html" class="ma-submit-btn" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none"><i class="fa fa-arrow-left"></i> CONTINUAR COMPRANDO</a>' +
+      '<button class="ma-submit-btn" style="justify-content:center" onclick="vsClearCart()"><i class="fa fa-trash"></i> ESVAZIAR</button>' +
       '</div></div>' +
       '<aside class="pp-cart-summary">' +
       '<h3>RESUMO DO PEDIDO</h3>' +
       '<div id="cartAddressMount"></div>' +
       '<div class="pps-row"><span>Subtotal</span><b>' + money(sub) + '</b></div>' +
       '<div class="pps-row pps-frete"><span>Frete</span><b>calculado no checkout</b></div>' +
-      '<button class="pp-btn-checkout" onclick="vsCheckout()"><i class="fa-brands fa-whatsapp"></i> FINALIZAR NO WHATSAPP</button>' +
+      '<button class="ma-submit-btn" style="width:100%;justify-content:center" onclick="vsCheckout()"><i class="fa-brands fa-whatsapp"></i> FINALIZAR NO WHATSAPP</button>' +
       '<p class="pps-note">Você será redirecionado ao WhatsApp para confirmar endereço e pagamento.</p>' +
       '</aside></div>';
   }

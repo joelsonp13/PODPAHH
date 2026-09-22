@@ -559,9 +559,9 @@
       '<p class="pp-modal-sub">Escolha um endereço de entrega para finalizar o pedido.</p>' +
       '<div class="pp-addr-list">' + listHTML + '</div>' +
       '<div class="pp-modal-btns">' +
-      '<button class="pp-btn-primary" id="pp-addr-confirm"><i class="fa fa-check"></i> CONFIRMAR E FINALIZAR</button>' +
-      '<button class="pp-btn-ghost" id="pp-addr-new"><i class="fa fa-plus"></i> ADICIONAR NOVO ENDEREÇO</button>' +
-      '<button class="pp-btn-ghost" id="pp-addr-cancel" style="color:#ff5252;border-color:rgba(255,50,50,.3)">CANCELAR</button>' +
+      '<button class="ma-submit-btn" style="justify-content:center" id="pp-addr-confirm"><i class="fa fa-check"></i> CONFIRMAR E FINALIZAR</button>' +
+      '<button class="ma-submit-btn" style="justify-content:center" id="pp-addr-new"><i class="fa fa-plus"></i> ADICIONAR NOVO ENDEREÇO</button>' +
+      '<button class="ma-submit-btn" style="justify-content:center" id="pp-addr-cancel">CANCELAR</button>' +
       '</div></div>';
     document.body.appendChild(ov);
     document.getElementById('pp-addr-confirm').onclick = function () {
@@ -588,9 +588,9 @@
       '<p class="pp-modal-sub">Preencha os dados de entrega. O CEP preenche rua, bairro e cidade automaticamente.</p>' +
       '<div id="pp-form-mount">' + addressFormFieldsHTML(pre) + '</div>' +
       '<div class="pp-modal-btns">' +
-      '<button class="pp-btn-primary" id="pp-addr-save"><i class="fa fa-check"></i> SALVAR ENDEREÇO</button>' +
-      (knownAddresses && knownAddresses.length ? '<button class="pp-btn-ghost" id="pp-addr-back"><i class="fa fa-arrow-left"></i> VOLTAR</button>' : '') +
-      '<button class="pp-btn-ghost" id="pp-addr-cancel2" style="color:#ff5252;border-color:rgba(255,50,50,.3)">CANCELAR</button>' +
+      '<button class="ma-submit-btn" style="justify-content:center" id="pp-addr-save"><i class="fa fa-check"></i> SALVAR ENDEREÇO</button>' +
+      (knownAddresses && knownAddresses.length ? '<button class="ma-submit-btn" style="justify-content:center" id="pp-addr-back"><i class="fa fa-arrow-left"></i> VOLTAR</button>' : '') +
+      '<button class="ma-submit-btn" style="justify-content:center" id="pp-addr-cancel2">CANCELAR</button>' +
       '</div></div>';
     document.body.appendChild(ov);
     bindAddressFormEvents();
@@ -704,7 +704,7 @@
       mount.innerHTML = '<div class="pp-cart-empty"><i class="fa fa-shopping-bag"></i>' +
         '<h2>Seu carrinho está vazio</h2>' +
         '<p>Adicione produtos para continuar.</p>' +
-        '<a class="pp-btn-primary" href="' + storeHome() + '">VER PRODUTOS</a></div>';
+        '<a class="ma-submit-btn" style="text-decoration:none;justify-content:center" href="' + storeHome() + '">VER PRODUTOS</a></div>';
       return;
     }
     var rows = '', sub = 0;
@@ -726,14 +726,14 @@
       '<div class="pp-cart-items"><table class="pp-cart-table"><tbody>' + rows + '</tbody></table>' +
       '<div class="pp-cart-actions">' +
       '<a href="../pages/loja.html" class="pp-btn-ghost" style="display:none"></a>' +
-      '<a href="' + storeHome() + '" class="pp-btn-ghost"><i class="fa fa-arrow-left"></i> CONTINUAR COMPRANDO</a>' +
-      '<button class="pp-btn-ghost" onclick="vsClearCart()"><i class="fa fa-trash"></i> ESVAZIAR</button>' +
+      '<a href="' + storeHome() + '" class="ma-submit-btn" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none"><i class="fa fa-arrow-left"></i> CONTINUAR COMPRANDO</a>' +
+      '<button class="ma-submit-btn" style="justify-content:center" onclick="vsClearCart()"><i class="fa fa-trash"></i> ESVAZIAR</button>' +
       '</div></div>' +
       '<aside class="pp-cart-summary">' +
       '<h3>RESUMO DO PEDIDO</h3>' +
       '<div class="pps-row"><span>Subtotal</span><b>' + money(sub) + '</b></div>' +
       '<div class="pps-row pps-frete"><span>Frete</span><b>calculado no checkout</b></div>' +
-      '<button class="pp-btn-checkout" onclick="vsCheckout()"><i class="fa-brands fa-whatsapp"></i> FINALIZAR NO WHATSAPP</button>' +
+      '<button class="ma-submit-btn" style="width:100%;justify-content:center" onclick="vsCheckout()"><i class="fa-brands fa-whatsapp"></i> FINALIZAR NO WHATSAPP</button>' +
       '<p class="pps-note">Você será redirecionado ao WhatsApp para confirmar endereço e pagamento.</p>' +
       '</aside></div>';
   }
@@ -760,7 +760,7 @@
       mount.innerHTML = '<div class="pp-cart-empty"><i class="fa fa-heart"></i>' +
         '<h2>Sua lista de desejos está vazia</h2>' +
         '<p>Toque no coração dos produtos para salvá-los aqui.</p>' +
-        '<a class="pp-btn-primary" href="' + storeHome() + '">VER PRODUTOS</a></div>';
+        '<a class="ma-submit-btn" style="text-decoration:none;justify-content:center" href="' + storeHome() + '">VER PRODUTOS</a></div>';
       return;
     }
     var cards = '';
@@ -789,7 +789,7 @@
       mount.innerHTML = '<div class="pp-cart-empty"><i class="fa fa-heart-o"></i>' +
         '<h2>Nenhum produto encontrado</h2>' +
         '<p>Os produtos salvos não estão mais disponíveis no catálogo.</p>' +
-        '<a class="pp-btn-primary" href="' + storeHome() + '">VER PRODUTOS</a></div>';
+        '<a class="ma-submit-btn" style="text-decoration:none;justify-content:center" href="' + storeHome() + '">VER PRODUTOS</a></div>';
       return;
     }
     mount.innerHTML =
