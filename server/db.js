@@ -975,13 +975,13 @@ function getProducts() {
 /* ---------------- PRODUCTS + MODELS ----------------
    Produto pode ter MODELOS dentro (ex: Black Sheep 25K -> Morango Kiwi, Menta, Uva...).
    Modelo: { id, name, price (0 = usa preço do produto), stock, image } */
-/* data URL íntegra ou string vazia (nunca salva imagem truncada/quebrada) */
+/* data URL íntegra e enxuta (rejeita >2.5MB: protege o banco de timeouts) */
 function sanitizeImageUrl(v) {
   if (typeof v !== 'string' || !v) return '';
   if (v.indexOf('data:') !== 0) return v;
   const comma = v.indexOf(',');
   const b64 = comma >= 0 ? v.slice(comma + 1) : '';
-  if (!b64 || b64.length % 4 !== 0 || v.length > 12000000) return '';
+  if (!b64 || b64.length % 4 !== 0 || v.length > 2500000) return '';
   return v;
 }
 

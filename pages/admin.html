@@ -1145,9 +1145,12 @@
     }
     if (!file.type || file.type.indexOf('image/') !== 0 || typeof createImageBitmap === 'undefined') { plain(); return; }
     createImageBitmap(file).then(function (bmp) {
-      var MAX = 1280;
+      // Sempre converte para JPEG (PNG/WebP estouram o banco); pula a
+      // conversão só para JPEG pequeno que já está no tamanho ideal.
+      var MAX = 1024;
       var scale = Math.min(1, MAX / Math.max(bmp.width, bmp.height));
-      if (scale >= 1 && file.size <= 1500000) { bmp.close(); plain(); return; }
+      var isJpeg = file.type === 'image/jpeg';
+      if (scale >= 1 && isJpeg && file.size <= 500000) { bmp.close(); plain(); return; }
       var cv = document.createElement('canvas');
       cv.width = Math.max(1, Math.round(bmp.width * scale));
       cv.height = Math.max(1, Math.round(bmp.height * scale));
@@ -1219,12 +1222,16 @@
       models: getModelsFromForm()
     };
     if (!product.name) { alert('Informe o nome do produto.'); return; }
+    // Trava o botão durante o save (evita duplo-clique criando duplicados)
+    var saveBtn = this.querySelector('button[type="submit"]');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '.6'; }
     try {
       var res = await fetch(API + '/admin/products', { method:'POST', headers: authHeaders(), body:JSON.stringify(product) });
       var json = await res.json();
       if (json.success) { closeProductModal(); loadAdminData(); }
       else alert('Erro ao salvar: ' + (json.error || 'desconhecido'));
     } catch (err) { alert('Erro de conexão com o servidor local.'); }
+    finally { if (saveBtn) { saveBtn.disabled = false; saveBtn.style.opacity = ''; } }
   });
 
   async function deleteProduct(id) {
