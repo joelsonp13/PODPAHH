@@ -211,7 +211,9 @@ document.addEventListener('DOMContentLoaded', function () {
     document.body.appendChild(div.firstChild);
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
+  // Roda direto (este arquivo inteiro já executa dentro do DOMContentLoaded;
+  // registrar outro listener aqui dentro nunca dispararia).
+  (function initRecoveryDetection() {
     var rp = recoveryParams();
     if (!rp.any) return;
     // Link morto (expirado/usado): avisa de cara em vez de mostrar o login.
@@ -254,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (recoveryParams().any) recoveryNotice('Não foi possível validar o link. Gere um novo.');
       }
     }, 1800);
-  });
+  })();
 
   function forgotShell(inner) {
     return '<div id="pp-forgot-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:3000;display:flex;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)vsForgotClose()">' +
