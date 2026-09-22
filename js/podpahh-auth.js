@@ -690,25 +690,31 @@ document.addEventListener('DOMContentLoaded', function () {
     var user = sess.user;
     var token = sess.token;
     var addresses = [], orders = [], wishlist = [];
+    // Esqueleto imediato (síncrono): nada de flash do form de login.
+    // Dados já vêm do cache da sessão; o fetch paralelo completa em seguida.
+    ensureAccStyle();
+    wrap.style.visibility = 'visible';
+    wrap.innerHTML = '<div class="acc-shell"><div class="acc-topline"></div>' +
+      '<div class="acc-top"><div><div class="acc-eyebrow">// CONTA</div>' +
+      '<h1 class="acc-title"><i class="fa fa-user-circle"></i> MINHA CONTA</h1></div>' +
+      '<div class="acc-usercard"><div class="acc-avatar">' + esc(String((user && user.name) || 'C').charAt(0).toUpperCase()) + '</div>' +
+      '<div><div class="acc-uname">' + esc(user.name) + '</div><div class="acc-umail"><i class="fa fa-spinner fa-spin"></i> carregando...</div></div></div></div>' +
+      '<div class="acc-body"><aside class="acc-side"><nav class="acc-menu">' +
+      '<button class="acc-mi on"><i class="fa fa-grid-2"></i> Painel</button>' +
+      '<button class="acc-mi"><i class="fa fa-receipt"></i> Meus Pedidos</button>' +
+      '<button class="acc-mi"><i class="fa fa-map-marker-alt"></i> Endereços</button>' +
+      '<button class="acc-mi"><i class="fa fa-id-card"></i> Dados da Conta</button>' +
+      '<button class="acc-mi"><i class="fa fa-heart"></i> Favoritos</button>' +
+      '</nav></div><div class="acc-main"><div class="acc-panel"><p style="color:var(--dim)"><i class="fa fa-spinner fa-spin"></i> Carregando seus dados...</p></div></div></div></div>';
     if (window.PodpahhDB) {
-      try {
-        if (window.PodpahhDB.getAddresses) {
-          var r = await window.PodpahhDB.getAddresses(token);
-          if (r && r.success) addresses = r.data || [];
-        }
-      } catch (e) {}
-      try {
-        if (window.PodpahhDB.getMyOrders) {
-          var ro = await window.PodpahhDB.getMyOrders(token);
-          if (ro && ro.success) orders = ro.data || [];
-        }
-      } catch (e) {}
-      try {
-        if (window.PodpahhDB.getWishlist) {
-          var rw = await window.PodpahhDB.getWishlist(token);
-          if (rw && rw.success) wishlist = rw.data || [];
-        }
-      } catch (e) {}
+      var settled = await Promise.all([
+        window.PodpahhDB.getAddresses ? window.PodpahhDB.getAddresses(token).catch(function () { return null; }) : Promise.resolve(null),
+        window.PodpahhDB.getMyOrders ? window.PodpahhDB.getMyOrders(token).catch(function () { return null; }) : Promise.resolve(null),
+        window.PodpahhDB.getWishlist ? window.PodpahhDB.getWishlist(token).catch(function () { return null; }) : Promise.resolve(null)
+      ]);
+      if (settled[0] && settled[0].success) addresses = settled[0].data || [];
+      if (settled[1] && settled[1].success) orders = settled[1].data || [];
+      if (settled[2] && settled[2].success) wishlist = settled[2].data || [];
     }
     try {
       orders.sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
