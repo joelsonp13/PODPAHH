@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function forgotShell(inner) {
     return '<div id="pp-forgot-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:3000;display:flex;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)vsForgotClose()">' +
-      '<div style="background:var(--bg1);border:1px solid var(--brd);padding:28px;width:100%;max-width:420px;box-sizing:border-box">' +
+      '<div style="background:rgba(10,28,68,.62);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(80,140,255,.4);box-shadow:0 20px 60px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.08);padding:28px;width:100%;max-width:420px;box-sizing:border-box">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
       '<h3 style="margin:0;font-family:\'Barlow Condensed\',sans-serif;font-size:1.3rem;letter-spacing:1px;color:#fff"><i class="fa fa-key" style="color:var(--c)"></i> RECUPERAR SENHA</h3>' +
       '<button onclick="vsForgotClose()" style="background:none;border:none;color:var(--dim);font-size:1.1rem;cursor:pointer"><i class="fa fa-times"></i></button></div>' +
