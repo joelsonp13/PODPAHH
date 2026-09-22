@@ -567,3 +567,35 @@ input:focus, textarea:focus, select:focus {
   background-color: var(--bg-main) !important;
   color: var(--text-main) !important;
 }
+
+/* ===== ENDEREÇO NA PÁGINA DO CARRINHO =====
+   Fora do card: transparente (herda a página). O card/linhas: sólido. */
+.pp-addr-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: .82rem; font-weight: 700; letter-spacing: 2px;
+  color: var(--accent); margin: 16px 0 10px;
+}
+.pp-addr-title i { margin-right: 6px; }
+.pp-addr-pick { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.pp-addr-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 12px; cursor: pointer;
+}
+.pp-addr-row.sel { border-color: var(--accent); }
+.pp-addr-row input { margin-top: 3px; accent-color: var(--accent); flex-shrink: 0; }
+.pp-addr-txt { font-size: .82rem; color: var(--text-main); line-height: 1.45; overflow-wrap: break-word; min-width: 0; }
+.pp-addr-txt b { color: var(--text-main); }
+.pp-addr-cep { color: var(--text-muted); font-size: .76rem; white-space: nowrap; }
+
+/* ===== CARRINHO RESPONSIVO ===== */
+@media (max-width: 640px) {
+  .pp-cart-title { font-size: 1.4rem; margin: 16px 0 12px; }
+  .pp-cart-table td { padding: 10px 6px; font-size: .82rem; }
+  .ppc-img img { width: 48px !important; height: 48px !important; }
+  .ppc-name a { font-size: .82rem; }
+  .pp-cart-summary { padding: 18px 14px; }
+  .pp-cart-actions { flex-direction: column; align-items: stretch; }
+  .pp-addr-row { padding: 10px; }
+  .pp-addr-cep { display: block; margin-top: 2px; }
+}

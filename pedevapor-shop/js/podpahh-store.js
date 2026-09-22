@@ -671,6 +671,9 @@
       loginRedirect('Sua sessão expirou. Entre novamente para finalizar o pedido.');
       return;
     }
+    // 0) Endereço já escolhido na página do carrinho: vai direto.
+    var pre = getPageSelectedAddress();
+    if (pre) { proceedAfterAddress(pre); return; }
     // ENDEREÇO OBRIGATÓRIO: busca os endereços do cliente no servidor.
     if (!window.PodpahhDB || !window.PodpahhDB.getAddresses) {
       alert('Servidor indisponível. Tente novamente em instantes.');
@@ -733,9 +736,83 @@
       '<h3>RESUMO DO PEDIDO</h3>' +
       '<div class="pps-row"><span>Subtotal</span><b>' + money(sub) + '</b></div>' +
       '<div class="pps-row pps-frete"><span>Frete</span><b>calculado no checkout</b></div>' +
+      '<div id="cartAddrMount"></div>' +
       '<button class="ma-submit-btn" style="width:100%;justify-content:center" onclick="vsCheckout()"><i class="fa-brands fa-whatsapp"></i> FINALIZAR NO WHATSAPP</button>' +
       '<p class="pps-note">Você será redirecionado ao WhatsApp para confirmar endereço e pagamento.</p>' +
       '</aside></div>';
+    refreshCartAddrMount();
+  }
+
+  /* -------- Endereço visível na página do carrinho -------- */
+  var cartAddrCache = [];
+  var cartAddrSel = null;
+
+  function getPageSelectedAddress() {
+    if (!cartAddrSel || !cartAddrCache.length) return null;
+    return cartAddrCache.find(function (a) { return a.id === cartAddrSel; }) || null;
+  }
+
+  window.vsCartAddrPick = function (id) {
+    cartAddrSel = id;
+    refreshCartAddrMount();
+  };
+
+  window.vsCartAddrNew = function () {
+    openAddressForm(null, cartAddrCache, function (saved) {
+      if (saved) {
+        cartAddrCache.push(saved);
+        cartAddrSel = saved.id;
+      }
+      refreshCartAddrMount();
+    });
+  };
+
+  function refreshCartAddrMount() {
+    var mount = document.getElementById('cartAddrMount');
+    if (!mount) return;
+    var user = loggedUser();
+    var token = getSessionToken();
+    if (!user) {
+      cartAddrCache = []; cartAddrSel = null;
+      mount.innerHTML = '<a href="' + base() + '/pages/minha-conta.html" class="ma-submit-btn" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin:12px 0"><i class="fa fa-user"></i> ENTRAR PARA VER ENDEREÇOS</a>';
+      return;
+    }
+    if (!token || !window.PodpahhDB || !window.PodpahhDB.getAddresses) {
+      cartAddrCache = []; cartAddrSel = null;
+      mount.innerHTML = '<p style="font-size:.8rem;color:var(--text-muted);margin:12px 0">Sessão antiga: <a href="' + base() + '/pages/minha-conta.html" style="color:var(--c)">entre novamente</a> para usar seus endereços.</p>';
+      return;
+    }
+    window.PodpahhDB.getAddresses(token).then(function (r) {
+      var m2 = document.getElementById('cartAddrMount');
+      if (!m2) return;
+      if (!r || !r.success) {
+        m2.innerHTML = '<p style="font-size:.8rem;color:var(--text-muted);margin:12px 0">Não foi possível carregar endereços.</p>';
+        return;
+      }
+      cartAddrCache = r.data || [];
+      var def = cartAddrCache.find(function (a) { return a.is_default; }) || cartAddrCache[0];
+      if (!cartAddrSel || !cartAddrCache.some(function (a) { return a.id === cartAddrSel; })) {
+        cartAddrSel = def ? def.id : null;
+      }
+      var html = '<div class="pp-addr-title"><i class="fa fa-map-marker-alt"></i> ENDEREÇO DE ENTREGA</div>';
+      if (!cartAddrCache.length) {
+        html += '<p style="font-size:.84rem;color:var(--text-muted);margin:0 0 10px">Nenhum endereço salvo.</p>';
+      } else {
+        html += '<div class="pp-addr-pick">' + cartAddrCache.map(function (a) {
+          var sel = a.id === cartAddrSel;
+          return '<label class="pp-addr-row' + (sel ? ' sel' : '') + '">' +
+            '<input type="radio" name="cart_addr" ' + (sel ? 'checked' : '') + ' onchange="vsCartAddrPick(\'' + String(a.id).replace(/'/g, '') + '\')">' +
+            '<span class="pp-addr-txt"><b>[' + esc(a.label || 'Endereço') + ']' + (a.is_default ? ' ★' : '') + '</b> ' +
+            esc(a.street) + ', ' + esc(a.number) + ' — ' + esc(a.neighborhood) + ', ' + esc(a.city) + '/' + esc(a.state) +
+            ' <span class="pp-addr-cep">(CEP ' + esc(a.postal_code) + ')</span></span></label>';
+        }).join('') + '</div>';
+      }
+      html += '<button class="ma-submit-btn" style="width:100%;justify-content:center;margin-top:4px" onclick="vsCartAddrNew()"><i class="fa fa-plus"></i> ADICIONAR NOVO ENDEREÇO</button>';
+      m2.innerHTML = html;
+    }).catch(function () {
+      var m3 = document.getElementById('cartAddrMount');
+      if (m3) m3.innerHTML = '<p style="font-size:.8rem;color:var(--text-muted);margin:12px 0">Falha de conexão ao carregar endereços.</p>';
+    });
   }
 
   /* ---------------- WISHLIST PAGE (pages/lista-de-desejos.html) ---------------- */
