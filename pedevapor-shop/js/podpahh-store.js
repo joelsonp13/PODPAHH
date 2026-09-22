@@ -718,7 +718,9 @@
         '<td class="ppc-img"><img src="' + esc(url(p.img)) + '" alt=""></td>' +
         '<td class="ppc-name"><a href="' + url(p.url || '#') + '">' + esc(p.name) + '</a>' +
         '<div class="ppc-unit">' + money(p.price) + ' un.</div></td>' +
-        '<td class="ppc-qty"><span>' + it.qty + ' un.</span></td>' +
+        '<td class="ppc-qty"><button class="ci-qty-btn" onclick="vsQty(\'' + safeId(k) + '\',-1)">−</button>' +
+        '<span class="ci-qty-val">' + it.qty + '</span>' +
+        '<button class="ci-qty-btn" onclick="vsQty(\'' + safeId(k) + '\',1)">+</button></td>' +
         '<td class="ppc-total">' + money(tot) + '</td>' +
         '<td class="ppc-del"><button onclick="vsRemoveItem(\'' + safeId(k) + '\')" title="Remover"><i class="fa fa-trash"></i></button></td>' +
         '</tr>';
