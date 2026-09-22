@@ -131,6 +131,19 @@ app.post('/api/auth/logout', requireCustomer, (req, res) => {
   res.json({ success: true });
 });
 
+// Recuperação de senha em 2 passos (código via WhatsApp da loja)
+app.post('/api/auth/forgot', loginRateLimit, (req, res) => {
+  const { email } = req.body || {};
+  const result = db.requestPasswordReset(email);
+  res.status(result.status || 200).json(result);
+});
+
+app.post('/api/auth/reset', loginRateLimit, (req, res) => {
+  const { email, code, new_password } = req.body || {};
+  const result = db.resetPassword(email, code, new_password);
+  res.status(result.status || 200).json(result);
+});
+
 // Dados da própria conta (Minha Conta > Dados): nome + WhatsApp.
 app.get('/api/customer', requireCustomer, (req, res) => {
   const me = db.getCustomers().find(c => String(c.id) === String(req.customerId));
@@ -255,6 +268,16 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
 
 app.get('/api/admin/customers', requireAdmin, (req, res) => {
   res.json({ success: true, data: db.getCustomers() });
+});
+
+// Solicitações de redefinição de senha pendentes (lojista lê o código no chat)
+app.get('/api/admin/resets', requireAdmin, (req, res) => {
+  res.json({ success: true, data: db.listResets() });
+});
+
+app.delete('/api/admin/resets', requireAdmin, (req, res) => {
+  if (!req.query.id) return res.status(400).json({ success: false, error: 'ID é obrigatório.' });
+  res.json(db.revokeReset(req.query.id));
 });
 
 app.delete('/api/admin/customers/:id', requireAdmin, (req, res) => {

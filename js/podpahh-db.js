@@ -118,6 +118,33 @@
       }
     },
 
+    // Recuperação de senha em 2 passos (código via WhatsApp da loja)
+    forgotPassword: async function(email) {
+      try {
+        var res = await fetch(LOCAL_API + '/auth/forgot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email })
+        });
+        return await res.json();
+      } catch (err) {
+        return { success: false, error: 'Servidor offline.' };
+      }
+    },
+
+    resetPassword: async function(email, code, newPassword) {
+      try {
+        var res = await fetch(LOCAL_API + '/auth/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, code: code, new_password: newPassword })
+        });
+        return await res.json();
+      } catch (err) {
+        return { success: false, error: 'Servidor offline.' };
+      }
+    },
+
     // Dados da própria conta (nome + WhatsApp; e-mail é imutável)
     getCustomer: async function(token) {
       try {

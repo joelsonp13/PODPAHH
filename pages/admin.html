@@ -244,6 +244,7 @@
       <div class="adm-nav-item" data-panel="discounts" onclick="switchTab('discounts',this)"><i class="fa fa-tags"></i> <span>Promoções</span> <span class="nav-badge" id="navDiscCount">0</span></div>
       <div class="adm-nav-item" data-panel="customers" onclick="switchTab('customers',this)"><i class="fa fa-users"></i> <span>Contas</span> <span class="nav-badge" id="navCustCount">0</span></div>
       <div class="adm-nav-item" data-panel="orders" onclick="switchTab('orders',this)"><i class="fa fa-receipt"></i> <span>Pedidos</span> <span class="nav-badge" id="navOrderCount">0</span></div>
+      <div class="adm-nav-item" data-panel="resets" onclick="switchTab('resets',this)"><i class="fa fa-key"></i> <span>Redefinições</span> <span class="nav-badge" id="navResetCount">0</span></div>
       <div class="adm-nav-item" data-panel="settings" onclick="switchTab('settings',this)"><i class="fa fa-gear"></i> <span>Configurações</span></div>
       <div style="border-top:1px solid var(--adm-border);margin-top:14px;padding-top:14px">
         <div class="adm-nav-item" onclick="window.location.href='/pedevapor-shop/pages/categoria-produto/descartaveis.html'"><i class="fa fa-store"></i> <span>Ver Loja</span></div>
@@ -323,6 +324,15 @@
             </select>
           </div>
           <div style="overflow-x:auto"><table class="adm-table"><thead><tr><th>ID</th><th>Cliente / WhatsApp</th><th>Itens</th><th>Total</th><th>Status</th><th>Data</th><th>Ações</th></tr></thead><tbody id="orderList"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- PANEL: RESETS -->
+      <div class="adm-panel" id="panel-resets">
+        <div class="adm-card">
+          <div class="adm-card-title"><i class="fa fa-key"></i> Redefinições de Senha Pendentes</div>
+          <p style="opacity:.65;font-size:.82rem;margin:0 0 14px">O cliente chama no WhatsApp informando o protocolo. Confira a identidade no chat e <b>leia o código</b> para ele digitar junto da nova senha. Códigos expiram em 15 minutos.</p>
+          <div style="overflow-x:auto"><table class="adm-table"><thead><tr><th>Protocolo</th><th>Conta</th><th>Código</th><th>Expira</th><th>Ações</th></tr></thead><tbody id="resetList"></tbody></table></div>
         </div>
       </div>
 
@@ -544,7 +554,7 @@
 
   async function loadAdminData() {
     try {
-      var urls = [API + '/admin/stats', API + '/admin/products', API + '/admin/customers', API + '/orders'];
+      var urls = [API + '/admin/stats', API + '/admin/products', API + '/admin/customers', API + '/orders', API + '/admin/resets'];
       var raws = await Promise.all(urls.map(function (u) { return fetch(u, { headers: authHeaders() }); }));
       // 401 = token inválido/expirado: força novo login (checa status HTTP, não texto)
       if (raws.some(function (r) { return r.status === 401; })) {
@@ -569,6 +579,8 @@
       if (results[1].success) { allProducts = results[1].data; renderProducts(); renderDiscounts(); }
       if (results[2].success) { allCustomers = results[2].data; renderCustomers(); }
       if (results[3].success) { allOrders = results[3].data; renderOrders(); }
+      if (results[4] && results[4].success) { renderResets(results[4].data); }
+      else { renderResets([]); }
     } catch (e) {
       document.getElementById('productGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="fa fa-plug-circle-xmark"></i><p>Servidor local offline. Rode <b>npm start</b> na pasta do projeto.</p></div>';
     }
@@ -581,8 +593,8 @@
     document.querySelectorAll('.adm-nav-item').forEach(n => n.classList.remove('active'));
     panel.classList.add('active');
     if (el) el.classList.add('active');
-    var titles = { products:'Gerenciar Produtos', discounts:'Produtos em Promoção', customers:'Contas de Usuários', orders:'Pedidos Realizados', settings:'Configurações da Loja' };
-    var icons = { products:'fa-boxes-stacked', discounts:'fa-tags', customers:'fa-users', orders:'fa-receipt', settings:'fa-gear' };
+    var titles = { products:'Gerenciar Produtos', discounts:'Produtos em Promoção', customers:'Contas de Usuários', orders:'Pedidos Realizados', resets:'Redefinições de Senha', settings:'Configurações da Loja' };
+    var icons = { products:'fa-boxes-stacked', discounts:'fa-tags', customers:'fa-users', orders:'fa-receipt', resets:'fa-key', settings:'fa-gear' };
     document.getElementById('panelTitle').innerHTML = '<i class="fa ' + (icons[name] || 'fa-box') + '"></i> ' + (titles[name] || name);
     // Botão "novo produto" só faz sentido nas abas de produto/promoção
     var newBtn = document.getElementById('topbarNewBtn');
@@ -915,6 +927,36 @@
     if (!confirm('Apagar o pedido ' + id + '? Esta ação não pode ser desfeita.')) return;
     try {
       var res = await fetch(API + '/orders?id=' + encodeURIComponent(id), { method: 'DELETE', headers: authHeaders() });
+      var json = await res.json();
+      if (json.success) loadAdminData();
+      else alert('Erro: ' + (json.error || 'desconhecido'));
+    } catch (err) { alert('Erro de conexão.'); }
+  }
+
+  /* ---- RESETS ---- */
+  function renderResets(list) {
+    var el = document.getElementById('resetList');
+    var arr = list || [];
+    var badge = document.getElementById('navResetCount');
+    if (badge) badge.textContent = arr.length;
+    if (!arr.length) { el.innerHTML = '<tr><td colspan="5" class="empty-state">Nenhuma solicitação pendente.</td></tr>'; return; }
+    el.innerHTML = arr.map(function (r) {
+      var exp = r.expires_at ? new Date(r.expires_at).toLocaleString('pt-BR') : '—';
+      var waLink = r.customer_phone
+        ? '<a href="https://wa.me/55' + esc(String(r.customer_phone).replace(/\D/g, '')) + '" target="_blank" style="color:#4ade80">' + esc(r.customer_phone) + '</a>'
+        : '—';
+      return '<tr><td><code>' + esc(r.id) + '</code></td>' +
+        '<td><b>' + esc(r.customer_name || r.email) + '</b><br><small style="opacity:.65">' + esc(r.email) + ' | ' + waLink + '</small></td>' +
+        '<td><span style="font-size:1.3rem;font-weight:800;letter-spacing:3px;color:var(--adm-blue)">' + esc(r.code) + '</span></td>' +
+        '<td style="font-size:.8rem;opacity:.7">' + exp + '</td>' +
+        '<td><button type="button" class="pa-btn del" title="Revogar" onclick="deleteReset(\'' + escId(r.id) + '\')"><i class="fa fa-trash"></i></button></td></tr>';
+    }).join('');
+  }
+
+  async function deleteReset(id) {
+    if (!confirm('Revogar a solicitação ' + id + '? O código deixará de valer.')) return;
+    try {
+      var res = await fetch(API + '/admin/resets?id=' + encodeURIComponent(id), { method: 'DELETE', headers: authHeaders() });
       var json = await res.json();
       if (json.success) loadAdminData();
       else alert('Erro: ' + (json.error || 'desconhecido'));

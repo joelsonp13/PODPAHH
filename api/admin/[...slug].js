@@ -50,6 +50,18 @@ module.exports = async (req, res) => {
   if (r0 === 'customers' && r1 && req.method === 'DELETE') {
     return send(res, 200, await db.deleteCustomer(r1));
   }
+  if (r0 === 'resets' && !r1 && req.method === 'GET') {
+    try {
+      return send(res, 200, { success: true, data: await db.listResets() });
+    } catch (e) {
+      return send(res, 500, { success: false, error: 'Erro interno.' });
+    }
+  }
+  if (r0 === 'resets' && req.method === 'DELETE') {
+    const rid = r1 || req.query.id;
+    if (!rid) return send(res, 400, { success: false, error: 'ID é obrigatório.' });
+    return send(res, 200, await db.revokeReset(rid));
+  }
   if (r0 === 'import-catalog' && req.method === 'POST') {
     let catalogData = body.catalog;
     if (!catalogData) {

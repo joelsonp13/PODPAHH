@@ -146,6 +146,7 @@ function emptyDb() {
     logs: [],
     addresses: [],
     wishlist: [],
+    resets: [],
     settings: {}
   };
 }
@@ -175,6 +176,7 @@ function readDb() {
     if (!Array.isArray(data.logs)) data.logs = [];
     if (!Array.isArray(data.addresses)) data.addresses = [];
     if (!Array.isArray(data.wishlist)) data.wishlist = [];
+    if (!Array.isArray(data.resets)) data.resets = [];
     if (!data.settings || typeof data.settings !== 'object' || Array.isArray(data.settings)) {
       data.settings = {};
     }
@@ -199,6 +201,7 @@ function writeDb(data) {
   // A coleção pode faltar em bancos antigos; criá-la sem descartar o restante.
   if (!Array.isArray(persisted.addresses)) persisted.addresses = [];
   if (!Array.isArray(persisted.wishlist)) persisted.wishlist = [];
+  if (!Array.isArray(persisted.resets)) persisted.resets = [];
   fs.writeFileSync(DB_FILE, JSON.stringify(persisted, null, 2), 'utf8');
 }
 
@@ -603,6 +606,107 @@ function deleteAddress(customerId, addressId) {
   return { success: true };
 }
 
+/* ---------------- PASSWORD RESET (via WhatsApp da loja) ----------------
+   1. Cliente informa o e-mail -> gera protocolo + código de 6 dígitos (15min).
+   2. Cliente chama a loja no WhatsApp informando o protocolo.
+   3. Lojista confere a identidade no chat e lê o código (painel admin).
+   4. Cliente digita código + nova senha -> troca + derruba sessões antigas. */
+const RESET_TTL = 15 * 60 * 1000;
+
+function pruneResets(db) {
+  const now = Date.now();
+  db.resets = (db.resets || []).filter(r => r && !r.used && Number(r.expires_at) > now);
+}
+
+function requestPasswordReset(email) {
+  const db = readDb();
+  pruneResets(db);
+  const mail = String(email || '').trim().toLowerCase();
+  if (!mail || mail.indexOf('@') === -1) {
+    return { success: false, status: 400, error: 'Informe um e-mail válido.' };
+  }
+  const customer = db.customers.find(c => String(c.email || '').toLowerCase() === mail);
+  // Anti-enumeração: resposta genérica; protocolo só existe se a conta existir.
+  if (!customer) {
+    writeDb(db);
+    return { success: true, data: null };
+  }
+  const recent = db.resets.find(r => r.customer_id === customer.id);
+  if (recent) {
+    return { success: true, data: { protocol: recent.id, expires_in: Math.max(1, Math.round((recent.expires_at - Date.now()) / 1000)) } };
+  }
+  const now = Date.now();
+  const code = String(crypto.randomInt(100000, 1000000));
+  const item = {
+    id: 'RST-' + now.toString(36).toUpperCase() + crypto.randomBytes(2).toString('hex').toUpperCase(),
+    customer_id: customer.id,
+    email: customer.email,
+    code,
+    expires_at: now + RESET_TTL,
+    used: false,
+    created_at: new Date().toISOString()
+  };
+  db.resets = db.resets.filter(r => r.customer_id !== customer.id);
+  db.resets.push(item);
+  writeDb(db);
+  return { success: true, data: { protocol: item.id, expires_in: RESET_TTL / 1000 } };
+}
+
+function resetPassword(email, code, newPass) {
+  const mail = String(email || '').trim().toLowerCase();
+  if (!newPass || String(newPass).length < 8) {
+    return { success: false, status: 400, error: 'A nova senha precisa ter no mínimo 8 caracteres.' };
+  }
+  const db = readDb();
+  pruneResets(db);
+  const found = db.resets.find(r =>
+    r && !r.used && Number(r.expires_at) > Date.now() &&
+    String(r.email || '').toLowerCase() === mail &&
+    String(r.code) === String(code || '').trim()
+  );
+  if (!found) {
+    writeDb(db);
+    return { success: false, status: 400, error: 'Código inválido ou expirado. Gere um novo.' };
+  }
+  const customer = db.customers.find(c => c && c.id === found.customer_id);
+  if (!customer) return { success: false, status: 404, error: 'Conta não encontrada.' };
+  customer.password = hashPassword(newPass);
+  found.used = true;
+  pruneResets(db);
+  // Derruba todas as sessões antigas da conta
+  customerSessions.forEach((s, token) => {
+    if (String(s.customer_id) === String(customer.id)) customerSessions.delete(token);
+  });
+  saveSessions();
+  writeDb(db);
+  const token = createCustomerSessionToken(customer.id);
+  return { success: true, token, data: safeCustomer(customer) };
+}
+
+function listResets() {
+  const db = readDb();
+  pruneResets(db);
+  writeDb(db);
+  return db.resets.map(r => {
+    const c = db.customers.find(x => x && x.id === r.customer_id) || {};
+    return {
+      id: r.id, email: r.email, code: r.code,
+      customer_name: c.name || '', customer_phone: c.phone || '',
+      expires_at: new Date(r.expires_at).toISOString(),
+      created_at: r.created_at
+    };
+  });
+}
+
+function revokeReset(id) {
+  const db = readDb();
+  const before = (db.resets || []).length;
+  db.resets = (db.resets || []).filter(r => String(r.id) !== String(id));
+  if (db.resets.length === before) return { success: false, status: 404, error: 'Solicitação não encontrada.' };
+  writeDb(db);
+  return { success: true };
+}
+
 /* ---------------- WISHLIST (FAVORITOS POR CONTA) ----------------
    Item: { id, customer_id, product_id, model_id ('': produto), created_at }
    Unicidade: 1 linha por (customer_id, product_id, model_id). */
@@ -1001,6 +1105,10 @@ module.exports = {
   registerCustomer,
   loginCustomer,
   updateCustomer,
+  requestPasswordReset,
+  resetPassword,
+  listResets,
+  revokeReset,
   createCustomerSession,
   verifyCustomerSession,
   getCustomerSession,
