@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var div = document.createElement('div');
     div.innerHTML = forgotShell(
       '<p style="color:var(--txt);font-size:.9rem">' + esc(text) + '</p>' +
-      '<button onclick="vsForgotOpen()" class="pp-btn-ghost" style="width:100%;margin-top:12px;border-color:var(--c);color:var(--c)">GERAR NOVO LINK</button>'
+      '<button onclick="vsForgotOpen()" class="ma-submit-btn" style="width:100%;margin-top:12px;justify-content:center">GERAR NOVO LINK</button>'
     );
     document.body.appendChild(div.firstChild);
   }
@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return '<p style="color:var(--dim);font-size:.85rem;margin:0 0 14px">Informe o e-mail da conta. Enviamos um link válido por <b>1 hora</b> para criar uma nova senha.</p>' +
       '<div class="acc-field"><label>E-MAIL DA CONTA *</label><input type="email" id="fg_email" placeholder="seu@email.com" style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.9rem;border-radius:0;box-sizing:border-box"></div>' +
       '<div id="fg_msg" style="font-size:.82rem;margin-bottom:10px"></div>' +
-      '<button onclick="vsForgotSend()" class="pp-btn-ghost" style="width:100%;border-color:var(--c);color:var(--c)"><i class="fa fa-paper-plane"></i> ENVIAR LINK</button>';
+      '<button onclick="vsForgotSend()" class="ma-submit-btn" style="width:100%;justify-content:center"><i class="fa fa-paper-plane"></i> ENVIAR LINK</button>';
   }
 
   window.vsForgotOpen = function() {
@@ -335,7 +335,7 @@ document.addEventListener('DOMContentLoaded', function () {
       '<div class="acc-field"><label>NOVA SENHA (MÍN. 8) *</label><input type="password" id="fg_pass" autocomplete="new-password" style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.9rem;border-radius:0;box-sizing:border-box"></div>' +
       '<div class="acc-field"><label>CONFIRMAR NOVA SENHA *</label><input type="password" id="fg_pass2" autocomplete="new-password" style="width:100%;background:rgb(30,30,30);border:1px solid rgba(255,255,255,.1);color:var(--txt);padding:11px 14px;font-size:.9rem;border-radius:0;box-sizing:border-box"></div>' +
       '<div id="fg_msg" style="font-size:.82rem;margin-bottom:10px"></div>' +
-      '<button onclick="vsResetSendSupa()" class="pp-btn-ghost" style="width:100%;border-color:var(--c);color:var(--c)"><i class="fa fa-save"></i> TROCAR SENHA</button>';
+      '<button onclick="vsResetSendSupa()" class="ma-submit-btn" style="width:100%;justify-content:center"><i class="fa fa-save"></i> TROCAR SENHA</button>';
   };
 
   window.vsForgotToCode = function() {
