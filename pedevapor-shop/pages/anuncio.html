@@ -451,7 +451,7 @@
       var puffs = Number(p.puffs) || 0;
       var initPrice = pre ? modelPrice(p, pre) : (Number(p.price) || 0);
       wrap.innerHTML =
-        '<div class="p-crumb"><a href="loja.html">Loja</a> &nbsp;›&nbsp; <a href="' + backHref + '">' + esc(catName) + '</a> &nbsp;›&nbsp; <b>' + esc(p.name) + '</b></div>' +
+        '<div class="p-crumb"><a href="' + backHref + '">' + esc(catName) + '</a> &nbsp;›&nbsp; <b>' + esc(p.name) + '</b></div>' +
         '<div class="pdp-grid">' +
         '<div class="pdp-gallery">' + galleryHtml(p) + '</div>' +
         '<div class="pdp-info">' +
